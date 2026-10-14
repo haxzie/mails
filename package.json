@@ -2,26 +2,20 @@
   "name": "mails",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "pnpm@11.2.2",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint"
-  },
-  "dependencies": {
-    "next": "16.4.0",
-    "react": "19.3.0",
-    "react-dom": "19.3.0"
+    "dev": "pnpm --filter @mails/web dev",
+    "dev:api": "pnpm --filter @mails/api dev",
+    "build": "pnpm --filter @mails/web build",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "pnpm --filter @mails/web lint",
+    "test": "pnpm -r test",
+    "db:generate": "pnpm --filter @mails/db generate",
+    "db:migrate:local": "pnpm --filter @mails/db migrate:local",
+    "db:migrate:remote": "pnpm --filter @mails/db migrate:remote",
+    "deploy": "pnpm --filter @mails/api deploy && pnpm --filter @mails/web deploy"
   },
   "devDependencies": {
-    "@tailwindcss/turbopack": "^4",
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "eslint": "^9",
-    "eslint-config-next": "16.4.0",
-    "tailwindcss": "^4",
-    "typescript": "^5"
-  },
-  "packageManager": "pnpm@11.2.2"
+    "typescript": "^5.9.3"
+  }
 }

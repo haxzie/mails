@@ -1,0 +1,15 @@
+# Copy to apps/api/.dev.vars and apps/web/.dev.vars for local development.
+# In production set these with `wrangler secret put <NAME>` for both Workers.
+
+# 32+ random chars. Encrypts each project's SES secret key at rest.
+ENCRYPTION_KEY="change-me-encryption-key"
+# Signs sessions, unsubscribe links and tracking links.
+AUTH_SECRET="change-me-auth-secret"
+# Shared secret in the SES/SNS webhook URL.
+SNS_WEBHOOK_SECRET="change-me-sns-secret"
+
+# SES identity used only for sign-in emails. Leave empty locally: the code is
+# then shown in the UI instead of being mailed.
+SYSTEM_SES_ACCESS_KEY_ID=""
+SYSTEM_SES_SECRET_ACCESS_KEY=""
+SYSTEM_FROM_EMAIL=""

@@ -1,0 +1,31 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "mails-web",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-10-01",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "binding": "ASSETS",
+    "directory": ".open-next/assets"
+  },
+  "observability": { "enabled": true },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "mails-db",
+      // Same database as the API worker.
+      "database_id": "REPLACE_WITH_D1_DATABASE_ID",
+      "migrations_dir": "../../packages/db/migrations"
+    }
+  ],
+  "queues": {
+    "producers": [{ "binding": "SEND_QUEUE", "queue": "mails-send" }]
+  },
+  "vars": {
+    "APP_URL": "http://localhost:3000",
+    "API_URL": "http://localhost:8787",
+    "ALLOWED_EMAILS": "musthu.gm@gmail.com",
+    "SYSTEM_SES_REGION": "us-east-1",
+    "SYSTEM_FROM_NAME": "Mails"
+  }
+}

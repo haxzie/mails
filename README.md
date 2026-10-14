@@ -1,36 +1,207 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Mails
 
-## Getting Started
+A self-hosted Loops / Mailchimp alternative that runs entirely on Cloudflare and
+sends through **your own Amazon SES account**.
 
-First, run the development server:
+- **Projects** — one per SaaS product you run, each with its own SES identity,
+  contacts, templates and API keys.
+- **Campaigns** — write HTML, pick an audience, send now or schedule.
+- **Transactional** — templates triggered by events your backend posts
+  (`user.signup` → welcome email).
+- **Contacts & lists** — CSV import, API upsert, unsubscribes, suppression list.
+- **Dashboard** — sends, deliveries, opens, clicks, bounces and complaints.
+- **Deliverability built in** — DKIM/SPF/DMARC checklist, one-click unsubscribe
+  (RFC 8058), plain-text alternative, hard-bounce and complaint suppression.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## Stack
+
+| Piece | What |
+|---|---|
+| `apps/web` | Next.js 16 dashboard, deployed to Workers with OpenNext |
+| `apps/api` | Hono Worker: public API, tracking, unsubscribe, SES webhook, send queue consumer, cron |
+| `packages/db` | Drizzle schema + D1 migrations |
+| `packages/core` | Sending pipeline, SES client, auth, templating, stats |
+
+Both Workers share one D1 database and one Cloudflare Queue.
+
+```
+your app ──POST /v1/events──▶ apps/api ──▶ Queue ──▶ consumer ──▶ Amazon SES
+                                 ▲                                    │
+dashboard (apps/web) ────────────┘            SNS event destination ───┘
+                                              POST /webhooks/ses
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Local development
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+pnpm install
+cp .dev.vars.example apps/api/.dev.vars
+cp .dev.vars.example apps/web/.dev.vars   # same values in both
+pnpm db:generate                          # only after changing the schema
+pnpm db:migrate:local
+pnpm dev                                  # dashboard on :3000
+pnpm dev:api                              # API worker on :8787
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Both processes share `.wrangler/state`, so they see the same local D1.
 
-## Learn More
+Sign-in is restricted to `ALLOWED_EMAILS` in `wrangler.jsonc` (your address by
+default). With no `SYSTEM_SES_*` credentials configured, the sign-in email is
+printed to the console and the one-time code is shown in the UI, so you can log
+in locally without a mail provider.
 
-To learn more about Next.js, take a look at the following resources:
+Local caveat: the queue producer in `next dev` and the consumer in
+`wrangler dev` are separate processes, so campaigns started from the local
+dashboard are not consumed locally. Trigger sends against the local API worker
+instead (`POST /v1/emails`), or test campaign sending on a deployed preview.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+pnpm typecheck   # every package
+pnpm test        # core unit tests
+pnpm --filter @mails/web lint
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Deploy to Cloudflare
 
-## Deploy on Vercel
+```bash
+# 1. Database and queues (once)
+pnpm --filter @mails/db exec wrangler d1 create mails-db
+pnpm --filter @mails/api exec wrangler queues create mails-send
+pnpm --filter @mails/api exec wrangler queues create mails-send-dlq
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Put the printed `database_id` into **both** `apps/api/wrangler.jsonc` and
+`apps/web/wrangler.jsonc`, and set the real URLs in each `vars` block:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```jsonc
+"vars": {
+  "APP_URL": "https://mails-web.<account>.workers.dev",
+  "API_URL": "https://mails-api.<account>.workers.dev",
+  "ALLOWED_EMAILS": "you@example.com"   // or "@yourdomain.com"
+}
+```
+
+```bash
+# 2. Schema
+pnpm db:migrate:remote
+
+# 3. Secrets — same values for both Workers
+for app in api web; do
+  pnpm --filter @mails/$app exec wrangler secret put ENCRYPTION_KEY
+  pnpm --filter @mails/$app exec wrangler secret put AUTH_SECRET
+  pnpm --filter @mails/$app exec wrangler secret put SNS_WEBHOOK_SECRET
+  pnpm --filter @mails/$app exec wrangler secret put SYSTEM_SES_ACCESS_KEY_ID
+  pnpm --filter @mails/$app exec wrangler secret put SYSTEM_SES_SECRET_ACCESS_KEY
+  pnpm --filter @mails/$app exec wrangler secret put SYSTEM_FROM_EMAIL
+done
+
+# 4. Ship
+pnpm deploy
+```
+
+`ENCRYPTION_KEY` encrypts each project's SES secret key at rest (AES-GCM).
+`AUTH_SECRET` signs sessions, unsubscribe links and tracking links — rotating it
+invalidates every session and every unsubscribe link already in an inbox.
+
+## Amazon SES setup
+
+1. Create an IAM user with `ses:SendEmail`, `ses:GetAccount`,
+   `ses:GetEmailIdentity` and `ses:CreateEmailIdentity`. Paste its keys into
+   **Project → Settings**.
+2. Set your sending domain and press **Verify domain** — that registers the
+   domain with SES and turns on Easy DKIM.
+3. Publish every record from the **DNS records** table: three DKIM `CNAME`s,
+   the custom MAIL FROM `MX` + SPF `TXT`, and a DMARC `TXT`.
+4. Create an SES **configuration set** (name it in Settings) with an SNS event
+   destination for *Send, Delivery, Bounce, Complaint, Open, Click, Reject*,
+   and subscribe the topic to:
+
+   ```
+   https://<your-api>/webhooks/ses?secret=<SNS_WEBHOOK_SECRET>
+   ```
+
+   The endpoint confirms the SNS subscription automatically and rejects
+   anything without the secret.
+5. Ask AWS to move the account out of the SES sandbox before sending to real
+   contacts, and keep the send rate in Settings at or below your SES quota.
+
+## API
+
+Authenticate with a project API key: `Authorization: Bearer mls_…`
+(**Project → API & keys**).
+
+| Endpoint | Purpose |
+|---|---|
+| `POST /v1/events` | Upsert the contact and send the template wired to that event |
+| `POST /v1/contacts` | Create or update a contact (`lists` to subscribe) |
+| `GET /v1/contacts/:email` | Read one contact |
+| `DELETE /v1/contacts/:email` | Delete a contact |
+| `POST /v1/contacts/:email/unsubscribe` | Unsubscribe from your own UI |
+| `POST /v1/emails` | One-off transactional send (inline HTML or `transactionalId`) |
+| `GET /v1/emails/:id` | Delivery status, opens and clicks |
+| `GET /v1/lists`, `POST /v1/lists` | Manage lists |
+| `GET /v1/stats?days=30` | Aggregate counters |
+
+Hook it into your signup flow:
+
+```ts
+await fetch("https://<your-api>/v1/events", {
+  method: "POST",
+  headers: {
+    authorization: `Bearer ${process.env.MAILS_API_KEY}`,
+    "content-type": "application/json",
+  },
+  body: JSON.stringify({
+    event: "user.signup",
+    email: user.email,
+    contact: { firstName: user.firstName },
+    data: { plan: "pro" },
+  }),
+});
+```
+
+Public, unauthenticated endpoints: `GET|POST /u/:token` (unsubscribe),
+`GET /t/o/:token` (open pixel), `GET /t/c/:token` (click redirect). All three
+take HMAC-signed tokens — the click redirect target is part of the signature,
+so the links can't be repointed.
+
+## Templating
+
+Bodies are rendered per recipient:
+
+- `{{firstName}}`, `{{lastName}}`, `{{name}}`, `{{email}}`
+- `{{properties.plan}}` (anything you stored on the contact, also available as
+  `{{plan}}`)
+- `{{project.name}}`, `{{unsubscribe_url}}`
+- `{{firstName | there}}` — fallback when the value is missing
+
+Values are HTML-escaped in the HTML part. Every campaign is sent as
+`multipart/alternative`; the plain-text part is generated from the HTML unless
+you write your own. An unsubscribe footer with your postal address is appended
+automatically unless the body already links `{{unsubscribe_url}}`.
+
+## Deliverability
+
+Enforced by the app, not left to you:
+
+- `List-Unsubscribe` + `List-Unsubscribe-Post: List-Unsubscribe=One-Click`
+- `Precedence: bulk` and `List-Id` on campaigns only, never on transactional mail
+- hard bounces and complaints go straight onto the project suppression list and
+  are never mailed again
+- unsubscribed contacts are skipped at send time, after queueing
+- campaigns refuse to send without a From address and SES credentials, and warn
+  about a missing postal address, DKIM domain, configuration set or preview text
+- transactional templates can opt out of consent checks (`Send even to
+  unsubscribed contacts`) for receipts and password resets only
+
+## Data model
+
+`users`, `sessions`, `login_tokens` · `projects`, `api_keys` · `contacts`,
+`lists`, `list_members`, `suppressions` · `campaigns`, `transactionals` ·
+`emails`, `email_events`.
+
+Campaign sending is a two-stage queue: `campaign.start` pages through recipients
+200 at a time writing `emails` rows, then each row is queued as `email.send`.
+Retries are safe — a row that already has a provider message id is never sent
+twice. A cron trigger starts scheduled campaigns every minute and prunes expired
+sessions and login tokens.
