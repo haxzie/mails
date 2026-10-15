@@ -1,10 +1,10 @@
+import { count, eq } from "drizzle-orm";
+import { campaigns, contacts, emails } from "@mails/db/schema";
 import { deleteProjectAction } from "@/app/actions/projects";
 import { SubmitButton } from "@/components/client";
-import { Card, CardHeader, Content } from "@/components/shell";
-import { formatNumber, requireProject } from "@/lib/projects";
+import { Content, SettingRow, SettingsSection } from "@/components/shell";
 import { getDb } from "@/lib/cloudflare";
-import { contacts, campaigns, emails } from "@mails/db/schema";
-import { count, eq } from "drizzle-orm";
+import { formatNumber, requireProject } from "@/lib/projects";
 
 export const instant = false;
 
@@ -22,30 +22,34 @@ export default async function DangerSettingsPage({
   ]);
 
   return (
-    <Content className="max-w-2xl space-y-5">
-      <Card>
-        <CardHeader
-          title="Delete project"
-          description="This cannot be undone. Suppression lists go with it, so previously unsubscribed addresses would be mailable again if you recreate the project."
-        />
-        <div className="space-y-4 p-5">
-          <p className="text-[13px] text-ink-soft">
-            Deleting <span className="font-medium text-ink">{project.name}</span>{" "}
-            removes {formatNumber(contactCount?.value ?? 0)} contact(s),{" "}
-            {formatNumber(campaignCount?.value ?? 0)} campaign(s) and{" "}
-            {formatNumber(emailCount?.value ?? 0)} message log(s).
-          </p>
+    <Content className="max-w-3xl space-y-7">
+      <SettingsSection
+        title="Danger zone"
+        description="Irreversible, and not limited to this screen's settings."
+      >
+        <SettingRow
+          label={`Delete ${project.name}`}
+          description={`Removes ${formatNumber(
+            contactCount?.value ?? 0,
+          )} contact(s), ${formatNumber(
+            campaignCount?.value ?? 0,
+          )} campaign(s) and ${formatNumber(
+            emailCount?.value ?? 0,
+          )} message log(s). The suppression list goes too, so addresses that unsubscribed would be mailable again if you recreate the project.`}
+          control="w-auto"
+        >
           <form action={deleteProjectAction}>
             <input type="hidden" name="slug" value={slug} />
             <SubmitButton
               variant="danger"
+              size="sm"
               confirm={`Delete “${project.name}” and everything in it?`}
             >
               Delete project
             </SubmitButton>
           </form>
-        </div>
-      </Card>
+        </SettingRow>
+      </SettingsSection>
     </Content>
   );
 }

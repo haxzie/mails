@@ -3,6 +3,7 @@ import type { ComponentProps, ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { Button as ShadButton, buttonVariants } from "@/components/ui/button";
 import { Checkbox as ShadCheckbox } from "@/components/ui/checkbox";
+import { Switch as ShadSwitch } from "@/components/ui/switch";
 import { Input as ShadInput } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea as ShadTextarea } from "@/components/ui/textarea";
@@ -207,6 +208,84 @@ export function Content({
   return <div className={cx("px-5 py-5", className)}>{children}</div>;
 }
 
+/**
+ * A titled group of settings rows: heading outside, rows inside one card,
+ * divided like the preferences screens they are modelled on.
+ */
+export function SettingsSection({
+  title,
+  description,
+  children,
+  footer,
+}: {
+  title: ReactNode;
+  description?: ReactNode;
+  children: ReactNode;
+  footer?: ReactNode;
+}) {
+  return (
+    <section className="space-y-2.5">
+      <div>
+        <h2 className="text-[13.5px] font-medium">{title}</h2>
+        {description ? (
+          <p className="mt-0.5 text-[12.5px] text-ink-muted">{description}</p>
+        ) : null}
+      </div>
+      <div className="divide-y divide-line overflow-hidden rounded-(--radius-card) border border-line bg-surface">
+        {children}
+        {footer ? (
+          <div className="flex justify-end gap-2 bg-canvas/40 px-4 py-2.5">
+            {footer}
+          </div>
+        ) : null}
+      </div>
+    </section>
+  );
+}
+
+/**
+ * One row of a settings section: what it is on the left, the control on the
+ * right. `stacked` drops the control onto its own full-width line, for
+ * anything too wide to sit beside the label.
+ */
+export function SettingRow({
+  label,
+  description,
+  children,
+  stacked = false,
+  control = "w-[260px]",
+}: {
+  label: ReactNode;
+  description?: ReactNode;
+  children?: ReactNode;
+  stacked?: boolean;
+  /** Width of the control column. */
+  control?: string;
+}) {
+  return (
+    <div
+      className={cn(
+        "gap-4 px-4 py-3",
+        stacked ? "space-y-2.5" : "flex items-center justify-between",
+      )}
+    >
+      <div className="min-w-0">
+        <p className="text-[13px] font-medium">{label}</p>
+        {description ? (
+          <p className="mt-0.5 text-[12.5px] leading-relaxed text-ink-muted">
+            {description}
+          </p>
+        ) : null}
+      </div>
+      {children ? (
+        <div className={cn("shrink-0", stacked ? "w-full" : control)}>
+          {children}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 /** Section heading inside a page body. */
 export function SectionTitle({
   title,
@@ -276,6 +355,10 @@ export function Checkbox({
   ...props
 }: ComponentProps<typeof ShadCheckbox>) {
   return <ShadCheckbox className={cn(className)} {...props} />;
+}
+
+export function Switch({ className, ...props }: ComponentProps<typeof ShadSwitch>) {
+  return <ShadSwitch className={cn(className)} {...props} />;
 }
 
 const badgeTones = {

@@ -34,8 +34,8 @@ export function SettingsNav({ slug }: { slug: string }) {
   const base = `/p/${slug}/settings`;
 
   return (
-    <nav className="sticky top-12 w-[196px] shrink-0 self-start border-r border-line p-3">
-      <div className="space-y-px">
+    <nav className="w-[200px] shrink-0 border-r border-line p-3">
+      <div className="sticky top-[60px] space-y-px">
         {SECTIONS.map((section) => {
           const href = `${base}${section.href}`;
           const active = pathname === href;

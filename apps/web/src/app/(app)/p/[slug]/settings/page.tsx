@@ -1,6 +1,11 @@
 import { updateProjectAction } from "@/app/actions/projects";
 import { ActionForm, SubmitButton } from "@/components/client";
-import { Card, CardHeader, Content, Field, Input } from "@/components/shell";
+import {
+  Content,
+  Input,
+  SettingRow,
+  SettingsSection,
+} from "@/components/shell";
 import { requireProject } from "@/lib/projects";
 
 export const instant = false;
@@ -12,38 +17,41 @@ export default async function GeneralSettingsPage({
   const { project } = await requireProject(slug);
 
   return (
-    <Content className="max-w-2xl space-y-5">
-      <Card>
-        <CardHeader
+    <Content className="max-w-3xl space-y-7">
+      <ActionForm action={updateProjectAction}>
+        <input type="hidden" name="slug" value={slug} />
+        <SettingsSection
           title="General"
           description="What this project is called and where you can be reached."
-        />
-        <ActionForm action={updateProjectAction} className="space-y-4 p-5">
-          <input type="hidden" name="slug" value={slug} />
+          footer={<SubmitButton size="sm">Save changes</SubmitButton>}
+        >
+          <SettingRow
+            label="Project name"
+            description="Shown in the sidebar and in the footer of your email."
+          >
+            <Input name="name" defaultValue={project.name} required />
+          </SettingRow>
 
-          <div className="grid gap-3 md:grid-cols-2">
-            <Field label="Project name">
-              <Input name="name" defaultValue={project.name} required />
-            </Field>
-            <Field label="URL slug" hint="Fixed once the project is created.">
-              <Input defaultValue={project.slug} disabled />
-            </Field>
-          </div>
+          <SettingRow
+            label="URL slug"
+            description="Fixed once the project is created."
+          >
+            <Input defaultValue={project.slug} disabled />
+          </SettingRow>
 
-          <Field
+          <SettingRow
             label="Postal address"
-            hint="Rendered in the footer of bulk email. CAN-SPAM requires a physical mailing address."
+            description="Rendered in the footer of bulk email. CAN-SPAM requires a physical mailing address."
+            stacked
           >
             <Input
               name="postalAddress"
               defaultValue={project.postalAddress ?? ""}
               placeholder="Acme Inc, 1 Market St, San Francisco, CA 94105"
             />
-          </Field>
-
-          <SubmitButton>Save changes</SubmitButton>
-        </ActionForm>
-      </Card>
+          </SettingRow>
+        </SettingsSection>
+      </ActionForm>
     </Content>
   );
 }

@@ -8,11 +8,10 @@ import { verifyDomainAction } from "@/app/actions/projects";
 import { ActionForm, CopyButton, SubmitButton } from "@/components/client";
 import {
   Badge,
-  Callout,
-  Card,
-  CardHeader,
   Content,
   Mono,
+  SettingRow,
+  SettingsSection,
   Table,
   Td,
   Th,
@@ -48,47 +47,49 @@ export default async function DomainSettingsPage({
     : [];
 
   return (
-    <Content className="space-y-5">
-      <Card>
-        <CardHeader
+    <Content className="max-w-4xl space-y-7">
+      <ActionForm action={verifyDomainAction}>
+        <input type="hidden" name="slug" value={slug} />
+        <SettingsSection
           title="Domain verification"
           description="Registers the domain with SES and turns on Easy DKIM."
-          action={
-            identity?.verifiedForSending ? (
-              <Badge tone="positive">verified</Badge>
-            ) : (
-              <Badge tone="warning">pending</Badge>
-            )
-          }
-        />
-        <ActionForm action={verifyDomainAction} className="space-y-3 p-5">
-          <input type="hidden" name="slug" value={slug} />
-          <p className="text-[12.5px] text-ink-muted">
-            {identity
-              ? `SES status: DKIM ${identity.dkimStatus ?? "unknown"}, sending ${
-                  identity.verifiedForSending ? "verified" : "not verified"
-                }.`
-              : identityError
-                ? `SES says: ${identityError}`
-                : "Set a sending domain and SES credentials first."}
-          </p>
-          <SubmitButton variant="secondary">
-            {identity ? "Re-check domain" : "Verify domain"}
-          </SubmitButton>
-        </ActionForm>
-      </Card>
+        >
+          <SettingRow
+            label={project.sendingDomain ?? "No sending domain set"}
+            description={
+              identity
+                ? `SES status: DKIM ${identity.dkimStatus ?? "unknown"}, sending ${
+                    identity.verifiedForSending ? "verified" : "not verified"
+                  }.`
+                : identityError
+                  ? `SES says: ${identityError}`
+                  : "Set a sending domain under Sending identity, and SES credentials under Amazon SES, first."
+            }
+            control="w-auto"
+          >
+            <div className="flex items-center gap-2">
+              {identity?.verifiedForSending ? (
+                <Badge tone="positive">verified</Badge>
+              ) : (
+                <Badge tone="warning">pending</Badge>
+              )}
+              <SubmitButton variant="secondary" size="sm">
+                {identity ? "Re-check" : "Verify domain"}
+              </SubmitButton>
+            </div>
+          </SettingRow>
+        </SettingsSection>
+      </ActionForm>
 
-      <Card>
-        <CardHeader
-          title="DNS records"
-          description="Publish all of these. Without DKIM and DMARC alignment, Gmail and Outlook will throttle or spam-folder bulk mail."
-        />
+      <SettingsSection
+        title="DNS records"
+        description="Publish all of these. Without DKIM and DMARC alignment, Gmail and Outlook throttle or spam-folder bulk mail."
+      >
         {records.length === 0 ? (
-          <p className="px-5 py-6 text-[13px] text-ink-muted">
-            Set a sending domain in{" "}
-            <span className="text-ink">Sending identity</span> to see the records
-            you need.
-          </p>
+          <SettingRow
+            label="Nothing to publish yet"
+            description="Set a sending domain to generate the records you need."
+          />
         ) : (
           <Table>
             <thead>
@@ -126,14 +127,7 @@ export default async function DomainSettingsPage({
             </tbody>
           </Table>
         )}
-      </Card>
-
-      {project.sendingDomain ? null : (
-        <Callout tone="warning" title="No sending domain">
-          Add one under Sending identity — without it you cannot align SPF and
-          DKIM with your From address.
-        </Callout>
-      )}
+      </SettingsSection>
     </Content>
   );
 }

@@ -68,7 +68,9 @@ export function PanelButton({
               <SheetDescription className="sr-only">{title}</SheetDescription>
             )}
           </SheetHeader>
-          <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
+          {/* min-w-0 so a long code sample scrolls inside the panel instead of
+              stretching it past the viewport. */}
+          <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto px-5 py-4">
             {children}
           </div>
         </SheetContent>

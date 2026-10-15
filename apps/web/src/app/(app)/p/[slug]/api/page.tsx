@@ -45,7 +45,7 @@ export default async function ApiPage({ params }: PageProps<"/p/[slug]/api">) {
               width="md"
               icon={<BookOpen className="size-3.5" strokeWidth={1.75} />}
             >
-              <div className="space-y-6 text-[12.5px]">
+              <div className="min-w-0 space-y-6 text-[12.5px]">
                 <section className="space-y-4">
                   <h3 className="text-[12px] font-medium tracking-[0.02em] text-ink-muted uppercase">
                     Contacts
@@ -132,7 +132,7 @@ export default async function ApiPage({ params }: PageProps<"/p/[slug]/api">) {
 
                 <section>
                   <p className="mb-1.5 font-medium">Mark a signup as paid</p>
-                  <pre className="overflow-x-auto rounded-lg bg-canvas px-3 py-3 font-mono text-[11.5px] leading-relaxed text-ink-soft">
+                  <pre className="block w-full max-w-full overflow-x-auto rounded-lg bg-canvas px-3 py-3 font-mono text-[11.5px] leading-relaxed text-ink-soft">
 {`await fetch(
   \`${env.API_URL}/v1/contacts/\${encodeURIComponent(user.email)}\`,
   {
@@ -252,7 +252,7 @@ function Endpoint({
       </p>
       <p className="mt-1 text-ink-muted">{note}</p>
       {body ? (
-        <pre className="mt-1.5 overflow-x-auto rounded-lg bg-canvas px-3 py-2 font-mono text-[11.5px] text-ink-soft">
+        <pre className="mt-1.5 block w-full max-w-full rounded-lg bg-canvas px-3 py-2 font-mono text-[11.5px] break-all whitespace-pre-wrap text-ink-soft">
           {body}
         </pre>
       ) : null}

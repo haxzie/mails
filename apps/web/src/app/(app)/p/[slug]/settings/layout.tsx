@@ -15,7 +15,9 @@ export default async function SettingsLayout({
         title="Settings"
         description="Sending identity, Amazon SES credentials and deliverability"
       />
-      <div className="flex items-start">
+      {/* Full height so the nav column's divider reaches the bottom of the
+          panel: 3rem of top bar plus the panel's 1rem of outer margin. */}
+      <div className="flex min-h-[calc(100dvh-4rem)] items-stretch">
         <SettingsNav slug={slug} />
         <div className="min-w-0 flex-1">{children}</div>
       </div>
