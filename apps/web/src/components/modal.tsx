@@ -14,7 +14,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { FormMessage, type ActionState } from "./client";
 import { buttonClass, cx, type ButtonVariant } from "./shell";
@@ -22,7 +21,50 @@ import { buttonClass, cx, type ButtonVariant } from "./shell";
 /** Lets content inside a modal dismiss it. */
 const CloseContext = createContext<(() => void) | null>(null);
 
-/** A button that opens its children in a shadcn (Radix) dialog. */
+/** The dialog itself, for callers that own the open state. */
+export function Modal({
+  open,
+  onOpenChange,
+  title,
+  description,
+  width = "sm",
+  children,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  title: string;
+  description?: string;
+  width?: "sm" | "md" | "lg";
+  children: ReactNode;
+}) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent
+        className={cx(
+          "max-h-[85vh] overflow-y-auto",
+          width === "lg"
+            ? "sm:max-w-[720px]"
+            : width === "md"
+              ? "sm:max-w-[560px]"
+              : "sm:max-w-[440px]",
+        )}
+      >
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+          {description ? (
+            <DialogDescription>{description}</DialogDescription>
+          ) : (
+            // Radix wants a description for the accessible name chain.
+            <DialogDescription className="sr-only">{title}</DialogDescription>
+          )}
+        </DialogHeader>
+        <CloseContext value={() => onOpenChange(false)}>{children}</CloseContext>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/** A button that opens its children in a modal. */
 export function ModalButton({
   label,
   title,
@@ -48,33 +90,25 @@ export function ModalButton({
   const [open, setOpen] = useState(false);
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger className={className ?? buttonClass(variant, size)}>
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className={className ?? buttonClass(variant, size)}
+      >
         {icon}
         {label}
-      </DialogTrigger>
-      <DialogContent
-        className={cx(
-          "max-h-[85vh] overflow-y-auto",
-          width === "lg"
-            ? "sm:max-w-[720px]"
-            : width === "md"
-              ? "sm:max-w-[560px]"
-              : "sm:max-w-[440px]",
-        )}
+      </button>
+      <Modal
+        open={open}
+        onOpenChange={setOpen}
+        title={title}
+        description={description}
+        width={width}
       >
-        <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
-          {description ? (
-            <DialogDescription>{description}</DialogDescription>
-          ) : (
-            // Radix wants a description for the accessible name chain.
-            <DialogDescription className="sr-only">{title}</DialogDescription>
-          )}
-        </DialogHeader>
-        <CloseContext value={() => setOpen(false)}>{children}</CloseContext>
-      </DialogContent>
-    </Dialog>
+        {children}
+      </Modal>
+    </>
   );
 }
 

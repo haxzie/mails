@@ -3,12 +3,10 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  ChevronsUpDown,
   KeyRound,
   LayoutGrid,
   ListChecks,
   LogOut,
-  Plus,
   ScrollText,
   Send,
   Settings,
@@ -17,17 +15,10 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { logoutAction } from "@/app/actions/auth";
-import { createProjectAction } from "@/app/actions/projects";
-import { SubmitButton } from "./client";
-import { ModalButton, ModalCancel, ModalForm } from "./modal";
-import { Field, Input, Select, cx } from "./shell";
-import { SES_REGIONS } from "@/lib/regions";
+import { ProjectSwitcher, type SidebarProject } from "./project-switcher";
+import { cx } from "./shell";
 
-export interface SidebarProject {
-  id: string;
-  name: string;
-  slug: string;
-}
+export type { SidebarProject };
 
 const NAV: Array<{ href: string; label: string; icon: LucideIcon; exact?: boolean }> =
   [
@@ -51,78 +42,11 @@ export function Sidebar({
   const pathname = usePathname();
   const match = /^\/p\/([^/]+)/.exec(pathname);
   const slug = match?.[1] ?? projects[0]?.slug ?? null;
-  const current = projects.find((project) => project.slug === slug);
 
   return (
     <aside className="flex w-[228px] shrink-0 flex-col">
       <div className="px-3 pt-3">
-        <details className="group relative">
-          <summary className="flex cursor-pointer list-none items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-hover">
-            <span className="grid size-6 shrink-0 place-items-center rounded-md bg-ink text-[11px] font-semibold text-white">
-              {(current?.name ?? "M").slice(0, 1).toUpperCase()}
-            </span>
-            <span className="min-w-0 flex-1 truncate text-[13.5px] font-medium">
-              {current?.name ?? "Select a project"}
-            </span>
-            <ChevronsUpDown className="size-3.5 shrink-0 text-ink-muted" strokeWidth={1.75} />
-          </summary>
-          <div className="absolute left-0 right-0 z-20 mt-1 overflow-hidden rounded-xl border border-line bg-surface p-1 shadow-lg">
-            {projects.map((project) => (
-              <Link
-                key={project.id}
-                href={`/p/${project.slug}`}
-                className={cx(
-                  "block truncate rounded-lg px-2.5 py-1.5 text-[13px]",
-                  project.slug === slug
-                    ? "bg-active font-medium"
-                    : "text-ink-soft hover:bg-hover",
-                )}
-              >
-                {project.name}
-              </Link>
-            ))}
-            <div className="mt-1 border-t border-line pt-1">
-              <ModalButton
-                label="New project"
-                title="New project"
-                description="One project per product you send email for — its own SES identity, contacts and API keys."
-                icon={<Plus className="size-3.5" strokeWidth={1.75} />}
-                className="flex w-full items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[13px] text-ink-soft hover:bg-hover"
-              >
-                <ModalForm action={createProjectAction} className="space-y-3">
-                  <Field
-                    label="Project name"
-                    hint="Shown in the sidebar and email footers."
-                  >
-                    <Input name="name" placeholder="Acme Analytics" required autoFocus />
-                  </Field>
-                  <Field
-                    label="From address"
-                    hint="You can change this later in settings."
-                  >
-                    <Input name="fromEmail" type="email" placeholder="hello@acme.com" />
-                  </Field>
-                  <Field label="Sending domain" hint="Used for DKIM, SPF and DMARC checks.">
-                    <Input name="sendingDomain" placeholder="acme.com" />
-                  </Field>
-                  <Field label="Amazon SES region">
-                    <Select name="sesRegion" defaultValue="us-east-1">
-                      {SES_REGIONS.map((region) => (
-                        <option key={region} value={region}>
-                          {region}
-                        </option>
-                      ))}
-                    </Select>
-                  </Field>
-                  <div className="flex gap-2 pt-1">
-                    <SubmitButton>Create project</SubmitButton>
-                    <ModalCancel />
-                  </div>
-                </ModalForm>
-              </ModalButton>
-            </div>
-          </div>
-        </details>
+        <ProjectSwitcher projects={projects} currentSlug={slug} />
       </div>
 
       {slug ? (
