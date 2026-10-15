@@ -1,7 +1,5 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { useActionState, useState, type ReactNode } from "react";
 import { useFormStatus } from "react-dom";
 import { buttonClass, cx, type ButtonVariant } from "./ui";
@@ -37,30 +35,6 @@ export function SubmitButton({
     >
       {pending ? "Working…" : children}
     </button>
-  );
-}
-
-export function NavLink({
-  href,
-  children,
-  exact = false,
-}: {
-  href: string;
-  children: ReactNode;
-  exact?: boolean;
-}) {
-  const pathname = usePathname();
-  const active = exact ? pathname === href : pathname.startsWith(href);
-  return (
-    <Link
-      href={href}
-      className={cx(
-        "flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-[13px] font-medium transition-colors",
-        active ? "bg-canvas text-ink" : "text-ink-soft hover:bg-canvas/70 hover:text-ink",
-      )}
-    >
-      {children}
-    </Link>
   );
 }
 

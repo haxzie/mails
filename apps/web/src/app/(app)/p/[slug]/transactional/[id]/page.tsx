@@ -13,10 +13,11 @@ import {
   Card,
   CardHeader,
   Checkbox,
+  Content,
   Field,
   Input,
-  PageHeader,
   Textarea,
+  TopBar,
 } from "@/components/ui";
 import { getDb, getEnv } from "@/lib/cloudflare";
 import { requireProject } from "@/lib/projects";
@@ -41,21 +42,25 @@ export default async function TransactionalDetailPage({
 
   return (
     <>
-      <PageHeader
+      <TopBar
         title={template.name}
-        description={`Triggered by the “${template.event}” event.`}
+        description={`Triggered by “${template.event}”`}
         action={
           <form action={deleteTransactionalAction}>
             <input type="hidden" name="slug" value={slug} />
             <input type="hidden" name="id" value={template.id} />
-            <SubmitButton variant="danger" confirm={`Delete “${template.name}”?`}>
+            <SubmitButton
+              variant="danger"
+              size="sm"
+              confirm={`Delete “${template.name}”?`}
+            >
               Delete
             </SubmitButton>
           </form>
         }
       />
 
-      <div className="grid gap-5 lg:grid-cols-[1fr_320px]">
+      <Content className="grid gap-5 lg:grid-cols-[1fr_320px]">
         <Card>
           <CardHeader title="Content" />
           <ActionForm action={saveTransactionalAction} className="space-y-4 p-5">
@@ -141,7 +146,7 @@ export default async function TransactionalDetailPage({
             </pre>
           </Card>
         </div>
-      </div>
+      </Content>
     </>
   );
 }

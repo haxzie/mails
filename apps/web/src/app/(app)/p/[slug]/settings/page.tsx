@@ -16,14 +16,15 @@ import {
   Card,
   CardHeader,
   Checkbox,
+  Content,
   Field,
   Input,
   Mono,
-  PageHeader,
   Select,
   Table,
   Td,
   Th,
+  TopBar,
 } from "@/components/ui";
 import { getEnv } from "@/lib/cloudflare";
 import { requireProject } from "@/lib/projects";
@@ -58,12 +59,12 @@ export default async function SettingsPage({
 
   return (
     <>
-      <PageHeader
+      <TopBar
         title="Settings"
-        description="Sending identity, Amazon SES credentials and deliverability."
+        description="Sending identity, Amazon SES credentials and deliverability"
       />
 
-      <div className="space-y-5">
+      <Content className="space-y-5">
         <Card>
           <CardHeader
             title="Project"
@@ -328,7 +329,7 @@ export default async function SettingsPage({
             </SubmitButton>
           </form>
         </Card>
-      </div>
+      </Content>
     </>
   );
 }

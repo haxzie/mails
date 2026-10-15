@@ -4,13 +4,16 @@
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 
-  --color-canvas: #fafafa;
+  --color-canvas: #f6f6f8;
   --color-surface: #ffffff;
-  --color-ink: #18181b;
-  --color-ink-soft: #52525b;
-  --color-ink-muted: #8b8b95;
-  --color-line: #ebebef;
-  --color-line-strong: #dededf;
+  --color-ink: #1c1d21;
+  --color-ink-soft: #55575f;
+  --color-ink-muted: #8a8d98;
+  --color-line: #ececed;
+  --color-line-strong: #e0e0e3;
+  /* Sidebar hover / active fills, tinted to the page background. */
+  --color-hover: rgba(28, 29, 33, 0.04);
+  --color-active: rgba(28, 29, 33, 0.07);
   --color-accent: #4f46e5;
   --color-accent-soft: #eef2ff;
   --color-positive: #15803d;
@@ -20,7 +23,7 @@
   --color-negative: #b91c1c;
   --color-negative-soft: #fef2f2;
 
-  --radius-card: 14px;
+  --radius-card: 12px;
 }
 
 * {

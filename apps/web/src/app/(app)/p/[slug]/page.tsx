@@ -8,12 +8,14 @@ import {
   Callout,
   Card,
   CardHeader,
+  Content,
   EmptyState,
   StatTile,
   StatusBadge,
   Table,
   Td,
   Th,
+  TopBar,
 } from "@/components/ui";
 import { getDb } from "@/lib/cloudflare";
 import { formatDate, formatNumber, requireProject } from "@/lib/projects";
@@ -52,8 +54,26 @@ export default async function DashboardPage({
 
   return (
     <>
-      <PageHead slug={slug} name={project.name} />
+      <TopBar
+        title={project.name}
+        description="Sending health and recent activity"
+        action={
+          <>
+            <ButtonLink
+              href={`/p/${slug}/contacts`}
+              variant="secondary"
+              size="sm"
+            >
+              Add contacts
+            </ButtonLink>
+            <ButtonLink href={`/p/${slug}/campaigns`} size="sm">
+              New campaign
+            </ButtonLink>
+          </>
+        }
+      />
 
+      <Content>
       {needsSetup ? (
         <div className="mb-5">
           <Callout tone="warning" title="Finish setting up sending">
@@ -210,6 +230,7 @@ export default async function DashboardPage({
           )}
         </Card>
       </div>
+      </Content>
     </>
   );
 }
@@ -220,23 +241,4 @@ function eventStatus(type: string): string {
   if (type === "complaint") return "complained";
   if (type === "send") return "sent";
   return type;
-}
-
-function PageHead({ slug, name }: { slug: string; name: string }) {
-  return (
-    <header className="flex flex-wrap items-end justify-between gap-3 pb-6">
-      <div>
-        <h1 className="text-[20px] font-semibold tracking-[-0.02em]">{name}</h1>
-        <p className="mt-1 text-[13px] text-ink-soft">
-          Sending health and recent activity.
-        </p>
-      </div>
-      <div className="flex gap-2">
-        <ButtonLink href={`/p/${slug}/campaigns`} variant="secondary">
-          Campaigns
-        </ButtonLink>
-        <ButtonLink href={`/p/${slug}/contacts`}>Add contacts</ButtonLink>
-      </div>
-    </header>
-  );
 }

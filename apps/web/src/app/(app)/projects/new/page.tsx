@@ -1,6 +1,6 @@
 import { createProjectAction } from "@/app/actions/projects";
 import { ActionForm, SubmitButton } from "@/components/client";
-import { Card, Field, Input, PageHeader, Select } from "@/components/ui";
+import { Card, Content, Field, Input, Select, TopBar } from "@/components/ui";
 import { SES_REGIONS } from "@/lib/regions";
 
 export const instant = false;
@@ -8,10 +8,11 @@ export const instant = false;
 export default function NewProjectPage() {
   return (
     <>
-      <PageHeader
+      <TopBar
         title="New project"
-        description="One project per product you send email for. Each has its own SES identity, contacts and API keys."
+        description="One project per product you send email for — its own SES identity, contacts and API keys."
       />
+      <Content>
       <Card className="max-w-xl p-5">
         <ActionForm action={createProjectAction} className="space-y-4">
           <Field label="Project name" hint="Shown in the sidebar and email footers.">
@@ -42,6 +43,7 @@ export default function NewProjectPage() {
           <SubmitButton>Create project</SubmitButton>
         </ActionForm>
       </Card>
+      </Content>
     </>
   );
 }

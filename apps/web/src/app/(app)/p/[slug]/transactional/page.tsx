@@ -7,14 +7,15 @@ import {
   Badge,
   Card,
   CardHeader,
+  Content,
   EmptyState,
   Field,
   Input,
   Mono,
-  PageHeader,
   Table,
   Td,
   Th,
+  TopBar,
 } from "@/components/ui";
 import { getDb, getEnv } from "@/lib/cloudflare";
 import { requireProject } from "@/lib/projects";
@@ -35,12 +36,12 @@ export default async function TransactionalPage({
 
   return (
     <>
-      <PageHeader
+      <TopBar
         title="Transactional"
-        description="Templates your product triggers over the API — welcome emails, receipts, password resets."
+        description="Templates your product triggers over the API"
       />
 
-      <div className="grid gap-5 lg:grid-cols-[1fr_320px]">
+      <Content className="grid gap-5 lg:grid-cols-[1fr_320px]">
         <Card>
           <CardHeader title="Templates" />
           {rows.length === 0 ? (
@@ -121,7 +122,7 @@ export default async function TransactionalPage({
             </pre>
           </Card>
         </div>
-      </div>
+      </Content>
     </>
   );
 }

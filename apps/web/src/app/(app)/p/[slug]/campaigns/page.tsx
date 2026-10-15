@@ -6,14 +6,15 @@ import { ActionForm, SubmitButton } from "@/components/client";
 import {
   Card,
   CardHeader,
+  Content,
   EmptyState,
   Field,
   Input,
-  PageHeader,
   StatusBadge,
   Table,
   Td,
   Th,
+  TopBar,
 } from "@/components/ui";
 import { getDb } from "@/lib/cloudflare";
 import { formatDate, formatNumber, requireProject } from "@/lib/projects";
@@ -33,12 +34,12 @@ export default async function CampaignsPage({
 
   return (
     <>
-      <PageHeader
+      <TopBar
         title="Campaigns"
-        description="One-off broadcasts to a list or to everyone who is subscribed."
+        description="One-off broadcasts to a list, or to everyone subscribed"
       />
 
-      <div className="grid gap-5 lg:grid-cols-[1fr_300px]">
+      <Content className="grid gap-5 lg:grid-cols-[1fr_300px]">
         <Card>
           <CardHeader title="All campaigns" />
           {rows.length === 0 ? (
@@ -101,7 +102,7 @@ export default async function CampaignsPage({
             <SubmitButton>Create campaign</SubmitButton>
           </ActionForm>
         </Card>
-      </div>
+      </Content>
     </>
   );
 }

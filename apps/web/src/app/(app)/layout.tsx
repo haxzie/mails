@@ -11,7 +11,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
   const projects = await listProjects(user.id);
 
   return (
-    <div className="flex min-h-dvh">
+    <div className="flex h-dvh overflow-hidden bg-canvas">
       <Sidebar
         email={user.email}
         projects={projects.map((project) => ({
@@ -20,8 +20,9 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
           slug: project.slug,
         }))}
       />
-      <main className="min-w-0 flex-1 px-8 py-7">
-        <div className="mx-auto max-w-5xl">{children}</div>
+      {/* The content panel floats over the tinted page background. */}
+      <main className="min-w-0 flex-1 overflow-y-auto rounded-xl border border-line bg-surface shadow-[0_1px_3px_rgba(20,20,30,0.04)] md:my-2 md:mr-2">
+        {children}
       </main>
     </div>
   );

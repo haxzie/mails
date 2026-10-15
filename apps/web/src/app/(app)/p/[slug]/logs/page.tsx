@@ -4,12 +4,13 @@ import {
   Badge,
   Card,
   CardHeader,
+  Content,
   EmptyState,
-  PageHeader,
   StatusBadge,
   Table,
   Td,
   Th,
+  TopBar,
 } from "@/components/ui";
 import { getDb } from "@/lib/cloudflare";
 import { formatDate, requireProject } from "@/lib/projects";
@@ -53,11 +54,12 @@ export default async function LogsPage({
 
   return (
     <>
-      <PageHeader
+      <TopBar
         title="Logs"
-        description="Every message this project has handed to SES, newest first."
+        description="Every message handed to SES, newest first"
       />
 
+      <Content>
       <Card>
         <CardHeader
           title="Messages"
@@ -125,6 +127,7 @@ export default async function LogsPage({
           </Table>
         )}
       </Card>
+      </Content>
     </>
   );
 }

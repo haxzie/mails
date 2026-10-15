@@ -24,6 +24,7 @@ import {
   Callout,
   Card,
   CardHeader,
+  Content,
   Field,
   Input,
   Select,
@@ -33,6 +34,7 @@ import {
   Td,
   Textarea,
   Th,
+  TopBar,
 } from "@/components/ui";
 import { getDb } from "@/lib/cloudflare";
 import { formatDate, formatNumber, requireProject } from "@/lib/projects";
@@ -69,38 +71,40 @@ export default async function CampaignPage({
 
   return (
     <>
-      <header className="flex flex-wrap items-start justify-between gap-3 pb-6">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-[20px] font-semibold tracking-[-0.02em]">
-              {campaign.name}
-            </h1>
-            <StatusBadge status={campaign.status} />
-          </div>
-          <p className="mt-1 text-[13px] text-ink-soft">
-            {campaign.listId
-              ? projectLists.find((list) => list.id === campaign.listId)?.name ??
-                "Deleted list"
-              : "Everyone subscribed"}{" "}
-            · {formatNumber(recipients)} recipient(s) right now
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <form action={duplicateCampaignAction}>
-            <input type="hidden" name="slug" value={slug} />
-            <input type="hidden" name="id" value={campaign.id} />
-            <SubmitButton variant="secondary">Duplicate</SubmitButton>
-          </form>
-          <form action={deleteCampaignAction}>
-            <input type="hidden" name="slug" value={slug} />
-            <input type="hidden" name="id" value={campaign.id} />
-            <SubmitButton variant="danger" confirm={`Delete “${campaign.name}”?`}>
-              Delete
-            </SubmitButton>
-          </form>
-        </div>
-      </header>
+      <TopBar
+        title={campaign.name}
+        badge={<StatusBadge status={campaign.status} />}
+        description={`${
+          campaign.listId
+            ? (projectLists.find((list) => list.id === campaign.listId)?.name ??
+              "Deleted list")
+            : "Everyone subscribed"
+        } · ${formatNumber(recipients)} recipient(s) right now`}
+        action={
+          <>
+            <form action={duplicateCampaignAction}>
+              <input type="hidden" name="slug" value={slug} />
+              <input type="hidden" name="id" value={campaign.id} />
+              <SubmitButton variant="secondary" size="sm">
+                Duplicate
+              </SubmitButton>
+            </form>
+            <form action={deleteCampaignAction}>
+              <input type="hidden" name="slug" value={slug} />
+              <input type="hidden" name="id" value={campaign.id} />
+              <SubmitButton
+                variant="danger"
+                size="sm"
+                confirm={`Delete “${campaign.name}”?`}
+              >
+                Delete
+              </SubmitButton>
+            </form>
+          </>
+        }
+      />
 
+      <Content>
       {started ? (
         <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-4">
           <StatTile
@@ -367,6 +371,7 @@ export default async function CampaignPage({
           ) : null}
         </div>
       </div>
+      </Content>
     </>
   );
 }

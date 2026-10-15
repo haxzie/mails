@@ -6,14 +6,15 @@ import {
   Badge,
   Card,
   CardHeader,
+  Content,
   EmptyState,
   Field,
   Input,
   Mono,
-  PageHeader,
   Table,
   Td,
   Th,
+  TopBar,
 } from "@/components/ui";
 import { getDb, getEnv } from "@/lib/cloudflare";
 import { formatDate, requireProject } from "@/lib/projects";
@@ -32,12 +33,12 @@ export default async function ApiPage({ params }: PageProps<"/p/[slug]/api">) {
 
   return (
     <>
-      <PageHeader
+      <TopBar
         title="API & keys"
-        description="Hook your product into this project. Keys are scoped to this project only."
+        description="Hook your product into this project"
       />
 
-      <div className="grid gap-5 lg:grid-cols-[1fr_320px]">
+      <Content className="grid gap-5 lg:grid-cols-[1fr_320px]">
         <div className="space-y-5">
           <Card>
             <CardHeader title="API keys" />
@@ -161,7 +162,7 @@ export default async function ApiPage({ params }: PageProps<"/p/[slug]/api">) {
             </pre>
           </Card>
         </div>
-      </div>
+      </Content>
     </>
   );
 }

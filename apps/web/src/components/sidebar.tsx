@@ -2,8 +2,20 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import {
+  ChevronsUpDown,
+  KeyRound,
+  LayoutGrid,
+  LogOut,
+  Plus,
+  ScrollText,
+  Send,
+  Settings,
+  SquareTerminal,
+  Users,
+  type LucideIcon,
+} from "lucide-react";
 import { logoutAction } from "@/app/actions/auth";
-import { NavLink, SubmitButton } from "./client";
 import { cx } from "./ui";
 
 export interface SidebarProject {
@@ -12,15 +24,16 @@ export interface SidebarProject {
   slug: string;
 }
 
-const NAV = [
-  { href: "", label: "Dashboard", exact: true },
-  { href: "/campaigns", label: "Campaigns" },
-  { href: "/contacts", label: "Contacts" },
-  { href: "/transactional", label: "Transactional" },
-  { href: "/logs", label: "Logs" },
-  { href: "/api", label: "API & keys" },
-  { href: "/settings", label: "Settings" },
-];
+const NAV: Array<{ href: string; label: string; icon: LucideIcon; exact?: boolean }> =
+  [
+    { href: "", label: "Dashboard", icon: LayoutGrid, exact: true },
+    { href: "/campaigns", label: "Campaigns", icon: Send },
+    { href: "/contacts", label: "Contacts", icon: Users },
+    { href: "/transactional", label: "Transactional", icon: SquareTerminal },
+    { href: "/logs", label: "Logs", icon: ScrollText },
+    { href: "/api", label: "API & keys", icon: KeyRound },
+    { href: "/settings", label: "Settings", icon: Settings },
+  ];
 
 export function Sidebar({
   projects,
@@ -35,19 +48,17 @@ export function Sidebar({
   const current = projects.find((project) => project.slug === slug);
 
   return (
-    <aside className="flex w-[232px] shrink-0 flex-col border-r border-line bg-surface">
-      <div className="px-3 py-3">
+    <aside className="flex w-[228px] shrink-0 flex-col">
+      <div className="px-3 pt-3">
         <details className="group relative">
-          <summary className="flex cursor-pointer list-none items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-canvas">
-            <span className="grid size-6 place-items-center rounded-md bg-ink text-[11px] font-semibold text-white">
+          <summary className="flex cursor-pointer list-none items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-hover">
+            <span className="grid size-6 shrink-0 place-items-center rounded-md bg-ink text-[11px] font-semibold text-white">
               {(current?.name ?? "M").slice(0, 1).toUpperCase()}
             </span>
-            <span className="min-w-0 flex-1 truncate text-[13px] font-medium">
+            <span className="min-w-0 flex-1 truncate text-[13.5px] font-medium">
               {current?.name ?? "Select a project"}
             </span>
-            <span aria-hidden className="text-ink-muted">
-              ⌄
-            </span>
+            <ChevronsUpDown className="size-3.5 shrink-0 text-ink-muted" strokeWidth={1.75} />
           </summary>
           <div className="absolute left-0 right-0 z-20 mt-1 overflow-hidden rounded-xl border border-line bg-surface p-1 shadow-lg">
             {projects.map((project) => (
@@ -57,8 +68,8 @@ export function Sidebar({
                 className={cx(
                   "block truncate rounded-lg px-2.5 py-1.5 text-[13px]",
                   project.slug === slug
-                    ? "bg-canvas font-medium"
-                    : "text-ink-soft hover:bg-canvas",
+                    ? "bg-active font-medium"
+                    : "text-ink-soft hover:bg-hover",
                 )}
               >
                 {project.name}
@@ -66,8 +77,9 @@ export function Sidebar({
             ))}
             <Link
               href="/projects/new"
-              className="mt-1 block rounded-lg border-t border-line px-2.5 py-1.5 text-[13px] text-accent"
+              className="mt-1 flex items-center gap-1.5 rounded-lg border-t border-line px-2.5 py-1.5 text-[13px] text-ink-soft hover:bg-hover"
             >
+              <Plus className="size-3.5" strokeWidth={1.75} />
               New project
             </Link>
           </div>
@@ -75,29 +87,67 @@ export function Sidebar({
       </div>
 
       {slug ? (
-        <nav className="flex-1 space-y-0.5 px-3">
+        <nav className="mt-3 flex-1 space-y-px px-3">
           {NAV.map((item) => (
-            <NavLink
+            <SidebarLink
               key={item.href}
               href={`/p/${slug}${item.href}`}
+              icon={item.icon}
               exact={item.exact}
             >
               {item.label}
-            </NavLink>
+            </SidebarLink>
           ))}
         </nav>
       ) : (
         <div className="flex-1" />
       )}
 
-      <div className="border-t border-line p-3">
-        <p className="truncate px-2 pb-2 text-[12px] text-ink-muted">{email}</p>
+      <div className="p-3">
+        <p className="truncate px-2 pb-1.5 text-[11.5px] text-ink-muted">{email}</p>
         <form action={logoutAction}>
-          <SubmitButton variant="ghost" size="sm" className="w-full justify-start">
+          <button
+            type="submit"
+            className="flex w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-[13.5px] text-ink-soft transition-colors hover:bg-hover hover:text-ink"
+          >
+            <LogOut className="size-4 shrink-0 text-ink-muted" strokeWidth={1.75} />
             Sign out
-          </SubmitButton>
+          </button>
         </form>
       </div>
     </aside>
+  );
+}
+
+function SidebarLink({
+  href,
+  icon: Icon,
+  exact,
+  children,
+}: {
+  href: string;
+  icon: LucideIcon;
+  exact?: boolean;
+  children: React.ReactNode;
+}) {
+  const pathname = usePathname();
+  const active = exact ? pathname === href : pathname.startsWith(href);
+  return (
+    <Link
+      href={href}
+      aria-current={active ? "page" : undefined}
+      className={cx(
+        "flex items-center gap-2.5 rounded-lg px-2 py-1.5 text-[13.5px] transition-colors",
+        active
+          ? "bg-active font-medium text-ink"
+          : "text-ink-soft hover:bg-hover hover:text-ink",
+      )}
+    >
+      <Icon
+        className={cx("size-4 shrink-0", active ? "text-ink" : "text-ink-muted")}
+        strokeWidth={1.75}
+      />
+      {children}
+    </Link>
   );
 }

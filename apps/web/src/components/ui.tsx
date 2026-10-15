@@ -85,9 +85,9 @@ export function CardHeader({
   action?: ReactNode;
 }) {
   return (
-    <div className="flex items-start justify-between gap-4 border-b border-line px-5 py-4">
+    <div className="flex items-start justify-between gap-4 border-b border-line px-5 py-3">
       <div>
-        <h2 className="text-[14px] font-semibold tracking-[-0.01em]">{title}</h2>
+        <h2 className="text-[13px] font-medium">{title}</h2>
         {description ? (
           <p className="mt-0.5 text-[12.5px] text-ink-muted">{description}</p>
         ) : null}
@@ -97,25 +97,65 @@ export function CardHeader({
   );
 }
 
-export function PageHeader({
+/**
+ * The bar pinned to the top of the content panel: page title on the left,
+ * actions on the right, matching the app-frame layout.
+ */
+export function TopBar({
   title,
   description,
+  badge,
   action,
 }: {
   title: ReactNode;
   description?: ReactNode;
+  badge?: ReactNode;
   action?: ReactNode;
 }) {
   return (
-    <header className="flex flex-wrap items-end justify-between gap-3 pb-6">
-      <div>
-        <h1 className="text-[20px] font-semibold tracking-[-0.02em]">{title}</h1>
-        {description ? (
-          <p className="mt-1 text-[13px] text-ink-soft">{description}</p>
-        ) : null}
-      </div>
-      {action ? <div className="flex items-center gap-2">{action}</div> : null}
+    <header className="sticky top-0 z-10 flex h-12 shrink-0 items-center gap-2.5 border-b border-line bg-surface/85 px-5 backdrop-blur">
+      <h1 className="shrink-0 text-[13.5px] font-medium tracking-[-0.005em]">
+        {title}
+      </h1>
+      {badge}
+      {description ? (
+        <p className="hidden truncate text-[12.5px] text-ink-muted md:block">
+          {description}
+        </p>
+      ) : null}
+      {action ? (
+        <div className="ml-auto flex shrink-0 items-center gap-2">{action}</div>
+      ) : null}
     </header>
+  );
+}
+
+/** Padded body of a page, below the top bar. */
+export function Content({
+  children,
+  className,
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
+  return <div className={cx("px-5 py-5", className)}>{children}</div>;
+}
+
+/** Section heading inside a page body. */
+export function SectionTitle({
+  title,
+  description,
+}: {
+  title: ReactNode;
+  description?: ReactNode;
+}) {
+  return (
+    <div className="pb-3">
+      <h2 className="text-[13.5px] font-medium">{title}</h2>
+      {description ? (
+        <p className="mt-0.5 text-[12.5px] text-ink-muted">{description}</p>
+      ) : null}
+    </div>
   );
 }
 
@@ -271,7 +311,10 @@ export function EmptyState({
 export function Table({ children }: { children: ReactNode }) {
   return (
     <div className="overflow-x-auto">
-      <table className="w-full border-collapse text-[13px]">{children}</table>
+      {/* The last row sits flush with the card edge, like Linear's lists. */}
+      <table className="w-full border-collapse text-[13px] [&_tbody_tr:last-child_td]:border-b-0">
+        {children}
+      </table>
     </div>
   );
 }
@@ -280,7 +323,7 @@ export function Th({ children, className }: { children?: ReactNode; className?: 
   return (
     <th
       className={cx(
-        "border-b border-line px-5 py-2.5 text-left text-[11.5px] font-medium uppercase tracking-[0.04em] text-ink-muted",
+        "border-b border-line px-5 py-2 text-left text-[11.5px] font-normal text-ink-muted",
         className,
       )}
     >
@@ -291,7 +334,7 @@ export function Th({ children, className }: { children?: ReactNode; className?: 
 
 export function Td({ children, className }: { children?: ReactNode; className?: string }) {
   return (
-    <td className={cx("border-b border-line px-5 py-3 align-middle", className)}>
+    <td className={cx("border-b border-line px-5 py-2.5 align-middle", className)}>
       {children}
     </td>
   );

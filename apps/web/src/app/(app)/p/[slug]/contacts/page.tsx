@@ -15,13 +15,14 @@ import {
   CardHeader,
   EmptyState,
   Field,
+  Content,
   Input,
-  PageHeader,
   Select,
   Table,
   Td,
   Textarea,
   Th,
+  TopBar,
 } from "@/components/ui";
 import { getDb } from "@/lib/cloudflare";
 import { formatDate, formatNumber, requireProject } from "@/lib/projects";
@@ -82,14 +83,14 @@ export default async function ContactsPage({
 
   return (
     <>
-      <PageHeader
+      <TopBar
         title="Contacts"
         description={`${formatNumber(subscribed)} subscribed of ${formatNumber(
           total,
-        )} total.`}
+        )} total`}
       />
 
-      <div className="grid gap-5 lg:grid-cols-[1fr_300px]">
+      <Content className="grid gap-5 lg:grid-cols-[1fr_300px]">
         <div className="space-y-5">
           <Card>
             <CardHeader
@@ -324,7 +325,7 @@ export default async function ContactsPage({
             </ActionForm>
           </Card>
         </div>
-      </div>
+      </Content>
     </>
   );
 }
