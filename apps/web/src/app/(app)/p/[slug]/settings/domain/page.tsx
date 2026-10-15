@@ -140,7 +140,7 @@ export default async function DomainSettingsPage({
 
           <SettingRow
             label="Certificate URL"
-            description="The .pem from DigiCert or Entrust. A VMC needs a registered trademark; a CMC does not, but Gmail ignores CMCs. Without either, only a handful of providers render the logo."
+            description="The .pem from DigiCert, Sectigo, GlobalSign or SSL.com. A VMC needs a registered trademark and earns the Gmail checkmark; a CMC only needs 12 months of public logo use and shows the logo without the checkmark. With neither, Fastmail and La Poste still display the logo, but Gmail and Apple Mail will not."
             stacked
           >
             <Input

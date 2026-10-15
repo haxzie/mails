@@ -27,5 +27,8 @@ pnpm --filter @mails/api exec wrangler r2 object put \
 The URL is set as the project's BIMI logo in Settings → Domain & DNS, which
 puts the `default._bimi` TXT record into the DNS table and the zone file.
 Publishing that record only helps once DMARC is at `p=quarantine` or
-`p=reject`, and Gmail, Yahoo and Apple Mail additionally need a VMC or CMC
-certificate referenced by the record's `a=` tag.
+`p=reject`. Without a mark certificate in the record's `a=` tag it is a
+self-asserted record: Fastmail and La Poste display it, Yahoo may depending on
+reputation, and Gmail and Apple Mail ignore it. VMCs and CMCs come from
+DigiCert, Sectigo, GlobalSign or SSL.com — all paid, roughly a year's validity
+(397 days maximum).

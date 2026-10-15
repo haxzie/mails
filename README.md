@@ -207,9 +207,12 @@ Enforced by the app, not left to you:
 Set a logo URL under **Settings → Domain & DNS** and the `default._bimi` TXT
 record joins the table and the zone file, with the recommended DMARC policy
 raised to `p=quarantine` — BIMI is ignored below enforcement. The logo must be
-SVG Tiny Portable/Secure, and Gmail, Yahoo and Apple Mail only render it when
-the record's `a=` tag points at a VMC (needs a registered trademark) or CMC
-certificate from DigiCert or Entrust; other providers show it without one.
+SVG Tiny Portable/Secure, and Gmail and Apple Mail only render it when the
+record's `a=` tag points at a mark certificate — a VMC, which needs a
+registered trademark and earns the Gmail checkmark, or a CMC, which only needs
+12 months of public logo use. DigiCert, Sectigo, GlobalSign and SSL.com issue
+them; all charge, and none is free. A record with no `a=` still displays in
+Fastmail and La Poste, and Yahoo may show it depending on sending reputation.
 
 ## Data model
 
