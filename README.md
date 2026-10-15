@@ -133,10 +133,12 @@ Authenticate with a project API key: `Authorization: Bearer mls_…`
 | Endpoint | Purpose |
 |---|---|
 | `POST /v1/events` | Upsert the contact and send the template wired to that event |
-| `POST /v1/contacts` | Create or update a contact (`lists` to subscribe) |
+| `POST /v1/contacts` | Create or overwrite a contact (`lists` to subscribe) |
+| `PATCH /v1/contacts/:email` | Partial update — merges `properties`, so `{"properties":{"plan":"pro"}}` marks a customer as paid without dropping the rest |
 | `GET /v1/contacts/:email` | Read one contact |
 | `DELETE /v1/contacts/:email` | Delete a contact |
 | `POST /v1/contacts/:email/unsubscribe` | Unsubscribe from your own UI |
+| `POST /v1/contacts/:email/resubscribe` | Reverse an unsubscribe (bounces and complaints stay suppressed) |
 | `POST /v1/emails` | One-off transactional send (inline HTML or `transactionalId`) |
 | `GET /v1/emails/:id` | Delivery status, opens and clicks |
 | `GET /v1/lists`, `POST /v1/lists` | Manage lists |

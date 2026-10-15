@@ -64,6 +64,72 @@ export async function upsertContact(
   return row!;
 }
 
+/**
+ * Merges a property patch into what is already stored. A `null` value
+ * removes the key, so callers can clear a flag without sending the rest.
+ */
+export function mergeProperties(
+  existing: Record<string, unknown> | null | undefined,
+  patch: Record<string, unknown> | null | undefined,
+): Record<string, unknown> | null {
+  if (patch === undefined) return existing ?? null;
+  if (patch === null) return null;
+  const merged: Record<string, unknown> = { ...(existing ?? {}) };
+  for (const [key, value] of Object.entries(patch)) {
+    if (value === null) delete merged[key];
+    else merged[key] = value;
+  }
+  return Object.keys(merged).length > 0 ? merged : null;
+}
+
+export interface ContactPatch {
+  firstName?: string | null;
+  lastName?: string | null;
+  /** Merged into the stored properties; `null` on a key removes it. */
+  properties?: Record<string, unknown> | null;
+  subscribed?: boolean;
+}
+
+/**
+ * Partial update of an existing contact. Unlike `upsertContact`, properties
+ * are merged rather than replaced, so marking someone as paid does not drop
+ * everything else you know about them.
+ */
+export async function updateContact(
+  db: Database,
+  projectId: string,
+  email: string,
+  patch: ContactPatch,
+) {
+  const current = await db.query.contacts.findFirst({
+    where: and(
+      eq(contacts.projectId, projectId),
+      eq(contacts.email, normalizeEmail(email)),
+    ),
+  });
+  if (!current) return null;
+
+  const values: Partial<typeof contacts.$inferInsert> = {};
+  if (patch.firstName !== undefined) values.firstName = patch.firstName;
+  if (patch.lastName !== undefined) values.lastName = patch.lastName;
+  if (patch.properties !== undefined) {
+    values.properties = mergeProperties(current.properties, patch.properties);
+  }
+
+  if (Object.keys(values).length > 0) {
+    await db.update(contacts).set(values).where(eq(contacts.id, current.id));
+  }
+
+  // Consent changes also move the address on and off the suppression list.
+  if (patch.subscribed === false && current.subscribed) {
+    await unsubscribeContact(db, projectId, current.id);
+  } else if (patch.subscribed === true && !current.subscribed) {
+    await resubscribeContact(db, projectId, current.id);
+  }
+
+  return db.query.contacts.findFirst({ where: eq(contacts.id, current.id) });
+}
+
 export async function addToList(
   db: Database,
   listId: string,

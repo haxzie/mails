@@ -1,9 +1,10 @@
 import { desc, eq } from "drizzle-orm";
-import { Plus } from "lucide-react";
+import { BookOpen, Plus } from "lucide-react";
 import { apiKeys } from "@mails/db/schema";
 import { createApiKeyAction, revokeApiKeyAction } from "@/app/actions/keys";
 import { SubmitButton } from "@/components/client";
 import { ModalButton, ModalCancel, ModalForm } from "@/components/modal";
+import { PanelButton } from "@/components/panel";
 import {
   Badge,
   EmptyState,
@@ -37,67 +38,121 @@ export default async function ApiPage({ params }: PageProps<"/p/[slug]/api">) {
         description={`Base URL ${env.API_URL}`}
         action={
           <>
-            <ModalButton
+            <PanelButton
               label="API reference"
               title="API reference"
-              description={`Authenticate with Authorization: Bearer mls_… · ${env.API_URL}`}
-              variant="secondary"
-              width="lg"
+              description={`Authorization: Bearer mls_… · ${env.API_URL}`}
+              width="md"
+              icon={<BookOpen className="size-3.5" strokeWidth={1.75} />}
             >
-              <div className="space-y-5 text-[12.5px]">
-                <Endpoint
-                  method="POST"
-                  path="/v1/events"
-                  body={`{"event":"user.signup","email":"ada@example.com","contact":{"firstName":"Ada"},"data":{"plan":"pro"}}`}
-                  note="Upserts the contact and sends the transactional template wired to that event. This is the one to call when a user signs up."
-                />
-                <Endpoint
-                  method="POST"
-                  path="/v1/contacts"
-                  body={`{"email":"ada@example.com","firstName":"Ada","properties":{"plan":"pro"},"lists":["lst_…"]}`}
-                  note="Create or update a contact without sending anything."
-                />
-                <Endpoint
-                  method="POST"
-                  path="/v1/emails"
-                  body={`{"to":"ada@example.com","subject":"Your receipt","html":"<p>Thanks!</p>"}`}
-                  note="One-off transactional send with inline content, or pass transactionalId to use a stored template."
-                />
-                <Endpoint
-                  method="GET"
-                  path="/v1/emails/:id"
-                  note="Delivery status, opens and clicks for one message."
-                />
-                <Endpoint
-                  method="POST"
-                  path="/v1/contacts/:email/unsubscribe"
-                  note="Unsubscribe from your own settings screen."
-                />
-                <Endpoint
-                  method="GET"
-                  path="/v1/stats?days=30"
-                  note="Aggregate counters."
-                />
+              <div className="space-y-6 text-[12.5px]">
+                <section className="space-y-4">
+                  <h3 className="text-[12px] font-medium tracking-[0.02em] text-ink-muted uppercase">
+                    Contacts
+                  </h3>
+                  <Endpoint
+                    method="POST"
+                    path="/v1/contacts"
+                    body={`{"email":"ada@example.com","firstName":"Ada","properties":{"plan":"free"},"lists":["lst_…"]}`}
+                    note="Create or overwrite a contact. Sending properties replaces the stored object."
+                  />
+                  <Endpoint
+                    method="PATCH"
+                    path="/v1/contacts/:email"
+                    body={`{"properties":{"plan":"pro","mrr":49}}`}
+                    note="Partial update, and the one to call when a customer starts paying: properties are merged into what you already stored, so other keys survive. Send a key as null to remove it. Also accepts firstName, lastName and subscribed."
+                  />
+                  <Endpoint
+                    method="GET"
+                    path="/v1/contacts/:email"
+                    note="Read one contact, including its properties and consent state."
+                  />
+                  <Endpoint
+                    method="GET"
+                    path="/v1/contacts?limit=50"
+                    note="Most recently added contacts first."
+                  />
+                  <Endpoint
+                    method="POST"
+                    path="/v1/contacts/:email/unsubscribe"
+                    note="Unsubscribe from your own settings screen. Adds the address to the suppression list."
+                  />
+                  <Endpoint
+                    method="POST"
+                    path="/v1/contacts/:email/resubscribe"
+                    note="Reverses an unsubscribe. Bounces and complaints stay suppressed and cannot be undone this way."
+                  />
+                  <Endpoint
+                    method="DELETE"
+                    path="/v1/contacts/:email"
+                    note="Deletes the contact. Their message history is kept."
+                  />
+                </section>
 
-                <div>
-                  <p className="mb-1.5 font-medium">From a Node backend</p>
+                <section className="space-y-4">
+                  <h3 className="text-[12px] font-medium tracking-[0.02em] text-ink-muted uppercase">
+                    Sending
+                  </h3>
+                  <Endpoint
+                    method="POST"
+                    path="/v1/events"
+                    body={`{"event":"user.signup","email":"ada@example.com","contact":{"firstName":"Ada"},"data":{"plan":"pro"}}`}
+                    note="Upserts the contact and sends the transactional template wired to that event. This is the one to call when a user signs up."
+                  />
+                  <Endpoint
+                    method="POST"
+                    path="/v1/emails"
+                    body={`{"to":"ada@example.com","subject":"Your receipt","html":"<p>Thanks!</p>"}`}
+                    note="One-off transactional send with inline content, or pass transactionalId to use a stored template."
+                  />
+                  <Endpoint
+                    method="GET"
+                    path="/v1/emails/:id"
+                    note="Delivery status, opens and clicks for one message."
+                  />
+                </section>
+
+                <section className="space-y-4">
+                  <h3 className="text-[12px] font-medium tracking-[0.02em] text-ink-muted uppercase">
+                    Lists & stats
+                  </h3>
+                  <Endpoint method="GET" path="/v1/lists" note="Every list in this project." />
+                  <Endpoint
+                    method="POST"
+                    path="/v1/lists"
+                    body={`{"name":"Paid customers"}`}
+                    note="Create a list, then pass its id in the lists array when upserting a contact."
+                  />
+                  <Endpoint
+                    method="GET"
+                    path="/v1/stats?days=30"
+                    note="Aggregate counters for the period."
+                  />
+                </section>
+
+                <section>
+                  <p className="mb-1.5 font-medium">Mark a signup as paid</p>
                   <pre className="overflow-x-auto rounded-lg bg-canvas px-3 py-3 font-mono text-[11.5px] leading-relaxed text-ink-soft">
-{`await fetch("${env.API_URL}/v1/events", {
-  method: "POST",
-  headers: {
-    authorization: \`Bearer \${process.env.MAILS_API_KEY}\`,
-    "content-type": "application/json",
+{`await fetch(
+  \`${env.API_URL}/v1/contacts/\${encodeURIComponent(user.email)}\`,
+  {
+    method: "PATCH",
+    headers: {
+      authorization: \`Bearer \${process.env.MAILS_API_KEY}\`,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({ properties: { plan: "pro", mrr: 49 } }),
   },
-  body: JSON.stringify({
-    event: "user.signup",
-    email: user.email,
-    contact: { firstName: user.firstName },
-  }),
-});`}
+);`}
                   </pre>
-                </div>
+                  <p className="mt-1.5 text-ink-muted">
+                    Anything you store shows up in templates as{" "}
+                    <Mono>{"{{plan}}"}</Mono>, and lets you build a paid-only
+                    list to target with a campaign.
+                  </p>
+                </section>
               </div>
-            </ModalButton>
+            </PanelButton>
 
             <ModalButton
               label="New key"

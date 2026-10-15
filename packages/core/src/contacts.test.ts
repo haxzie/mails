@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { isValidEmail, normalizeEmail, parseContactsCsv } from "./contacts";
+import {
+  isValidEmail,
+  mergeProperties,
+  normalizeEmail,
+  parseContactsCsv,
+} from "./contacts";
 
 describe("email validation", () => {
   it("accepts ordinary addresses", () => {
@@ -56,3 +61,31 @@ describe("CSV import", () => {
     expect(errors[0]).toContain("email");
   });
 });
+
+describe("property merging", () => {
+  it("keeps keys the patch does not mention", () => {
+    expect(mergeProperties({ plan: "free", seats: 3 }, { plan: "pro" })).toEqual({
+      plan: "pro",
+      seats: 3,
+    });
+  });
+
+  it("removes a key when its value is null", () => {
+    expect(mergeProperties({ plan: "pro", trial: true }, { trial: null })).toEqual(
+      { plan: "pro" },
+    );
+  });
+
+  it("leaves the stored value alone when there is no patch", () => {
+    expect(mergeProperties({ plan: "pro" }, undefined)).toEqual({ plan: "pro" });
+  });
+
+  it("clears everything when the patch itself is null", () => {
+    expect(mergeProperties({ plan: "pro" }, null)).toBeNull();
+  });
+
+  it("returns null rather than an empty object", () => {
+    expect(mergeProperties({ plan: "pro" }, { plan: null })).toBeNull();
+    expect(mergeProperties(null, {})).toBeNull();
+  });
+})

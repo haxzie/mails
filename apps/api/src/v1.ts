@@ -16,7 +16,9 @@ import {
   projectStats,
   queueEmail,
   resolveApiKey,
+  resubscribeContact,
   unsubscribeContact,
+  updateContact,
   upsertContact,
 } from "./deps";
 import type { HonoEnv } from "./types";
@@ -104,6 +106,32 @@ v1.get("/contacts/:email", async (c) => {
   return c.json({ contact });
 });
 
+const contactPatchSchema = z.object({
+  firstName: z.string().nullish(),
+  lastName: z.string().nullish(),
+  /** Merged into the stored properties; a null value removes that key. */
+  properties: z.record(z.string(), z.unknown()).nullish(),
+  subscribed: z.boolean().optional(),
+});
+
+/**
+ * Partial update — the endpoint to call when something about a customer
+ * changes, e.g. `{"properties":{"plan":"pro"}}` when they start paying.
+ */
+v1.patch("/contacts/:email", async (c) => {
+  const parsed = await body(c, contactPatchSchema);
+  if (!parsed.ok) return c.json({ error: "Invalid body", issues: parsed.issues }, 400);
+
+  const contact = await updateContact(
+    c.get("db"),
+    c.get("projectId"),
+    c.req.param("email"),
+    parsed.data,
+  );
+  if (!contact) return c.json({ error: "Contact not found" }, 404);
+  return c.json({ contact });
+});
+
 v1.delete("/contacts/:email", async (c) => {
   const db = c.get("db");
   const email = normalizeEmail(c.req.param("email"));
@@ -130,6 +158,21 @@ v1.post("/contacts/:email/unsubscribe", async (c) => {
   if (!contact) return c.json({ error: "Contact not found" }, 404);
   await unsubscribeContact(db, projectId, contact.id);
   return c.json({ unsubscribed: true });
+});
+
+v1.post("/contacts/:email/resubscribe", async (c) => {
+  const db = c.get("db");
+  const projectId = c.get("projectId");
+  const contact = await db.query.contacts.findFirst({
+    where: and(
+      eq(contactsTable.projectId, projectId),
+      eq(contactsTable.email, normalizeEmail(c.req.param("email"))),
+    ),
+  });
+  if (!contact) return c.json({ error: "Contact not found" }, 404);
+  // Only an unsubscribe is reversible; bounces and complaints stay suppressed.
+  await resubscribeContact(db, projectId, contact.id);
+  return c.json({ subscribed: true });
 });
 
 /* --------------------------------------------------------------- events */
