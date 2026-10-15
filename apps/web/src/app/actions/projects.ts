@@ -52,6 +52,10 @@ export async function createProjectAction(
   redirect(`/p/${slug}`);
 }
 
+/**
+ * Patches only the fields the submitted form actually carries, so each
+ * settings section can save on its own without clearing the others.
+ */
 export async function updateProjectAction(
   _state: ActionState,
   formData: FormData,
@@ -61,33 +65,47 @@ export async function updateProjectAction(
   const db = await getDb();
   const env = await getEnv();
 
-  const secret = String(formData.get("sesSecretKey") ?? "").trim();
-  const name = String(formData.get("name") ?? project.name).trim();
+  const text = (key: string) => String(formData.get(key) ?? "").trim();
+  // Unchecked boxes are not submitted, so every toggle ships a hidden "off"
+  // alongside it and the last value wins.
+  const checked = (key: string) => formData.getAll(key).includes("on");
 
-  await db
-    .update(projects)
-    .set({
-      name,
-      fromName: String(formData.get("fromName") ?? "").trim(),
-      fromEmail: String(formData.get("fromEmail") ?? "").trim().toLowerCase(),
-      replyTo: String(formData.get("replyTo") ?? "").trim() || null,
-      sendingDomain:
-        String(formData.get("sendingDomain") ?? "").trim().toLowerCase() || null,
-      postalAddress: String(formData.get("postalAddress") ?? "").trim() || null,
-      sesRegion: String(formData.get("sesRegion") ?? project.sesRegion),
-      sesAccessKeyId:
-        String(formData.get("sesAccessKeyId") ?? "").trim() || null,
-      // An empty field keeps the stored key instead of wiping it.
-      ...(secret
-        ? { sesSecretKey: await encryptSecret(secret, env.ENCRYPTION_KEY) }
-        : {}),
-      sesConfigurationSet:
-        String(formData.get("sesConfigurationSet") ?? "").trim() || null,
-      sendRate: Math.max(1, Number(formData.get("sendRate") ?? 10)),
-      trackOpens: formData.get("trackOpens") === "on",
-      trackClicks: formData.get("trackClicks") === "on",
-    })
-    .where(eq(projects.id, project.id));
+  const patch: Partial<typeof projects.$inferInsert> = {};
+  if (formData.has("name")) patch.name = text("name") || project.name;
+  if (formData.has("fromName")) patch.fromName = text("fromName");
+  if (formData.has("fromEmail")) patch.fromEmail = text("fromEmail").toLowerCase();
+  if (formData.has("replyTo")) patch.replyTo = text("replyTo") || null;
+  if (formData.has("sendingDomain")) {
+    patch.sendingDomain = text("sendingDomain").toLowerCase() || null;
+  }
+  if (formData.has("postalAddress")) {
+    patch.postalAddress = text("postalAddress") || null;
+  }
+  if (formData.has("sesRegion")) {
+    patch.sesRegion = text("sesRegion") || project.sesRegion;
+  }
+  if (formData.has("sesAccessKeyId")) {
+    patch.sesAccessKeyId = text("sesAccessKeyId") || null;
+  }
+  // An empty secret field keeps the stored key instead of wiping it.
+  if (text("sesSecretKey")) {
+    patch.sesSecretKey = await encryptSecret(
+      text("sesSecretKey"),
+      env.ENCRYPTION_KEY,
+    );
+  }
+  if (formData.has("sesConfigurationSet")) {
+    patch.sesConfigurationSet = text("sesConfigurationSet") || null;
+  }
+  if (formData.has("sendRate")) {
+    patch.sendRate = Math.max(1, Number(formData.get("sendRate") ?? 10));
+  }
+  if (formData.has("trackOpens")) patch.trackOpens = checked("trackOpens");
+  if (formData.has("trackClicks")) patch.trackClicks = checked("trackClicks");
+
+  if (Object.keys(patch).length === 0) return { success: "Nothing to save" };
+
+  await db.update(projects).set(patch).where(eq(projects.id, project.id));
 
   revalidatePath("/", "layout");
   return { success: "Settings saved" };
