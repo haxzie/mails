@@ -217,19 +217,24 @@ export function SettingsSection({
   description,
   children,
   footer,
+  action,
 }: {
   title: ReactNode;
   description?: ReactNode;
   children: ReactNode;
   footer?: ReactNode;
+  action?: ReactNode;
 }) {
   return (
     <section className="space-y-2.5">
-      <div>
-        <h2 className="text-[13.5px] font-medium">{title}</h2>
-        {description ? (
-          <p className="mt-0.5 text-[12.5px] text-ink-muted">{description}</p>
-        ) : null}
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h2 className="text-[13.5px] font-medium">{title}</h2>
+          {description ? (
+            <p className="mt-0.5 text-[12.5px] text-ink-muted">{description}</p>
+          ) : null}
+        </div>
+        {action ? <div className="shrink-0">{action}</div> : null}
       </div>
       <div className="divide-y divide-line overflow-hidden rounded-(--radius-card) border border-line bg-surface">
         {children}

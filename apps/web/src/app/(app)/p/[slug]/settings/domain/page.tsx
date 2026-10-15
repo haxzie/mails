@@ -1,11 +1,20 @@
 import {
+  bindZoneFile,
   dnsRecordsFor,
   getSesIdentity,
   projectSesCredentials,
   type SesIdentity,
 } from "@mails/core";
+import { FileCode } from "lucide-react";
 import { verifyDomainAction } from "@/app/actions/projects";
-import { ActionForm, CopyButton, SubmitButton } from "@/components/client";
+import {
+  ActionForm,
+  CopyButton,
+  CopyValue,
+  DownloadButton,
+  SubmitButton,
+} from "@/components/client";
+import { PanelButton } from "@/components/panel";
 import {
   Badge,
   Content,
@@ -45,6 +54,9 @@ export default async function DomainSettingsPage({
   const records = project.sendingDomain
     ? dnsRecordsFor(project.sendingDomain, project.sesRegion, identity)
     : [];
+  const zone = project.sendingDomain
+    ? bindZoneFile(project.sendingDomain, records)
+    : "";
 
   return (
     <Content className="max-w-4xl space-y-7">
@@ -84,6 +96,35 @@ export default async function DomainSettingsPage({
       <SettingsSection
         title="DNS records"
         description="Publish all of these. Without DKIM and DMARC alignment, Gmail and Outlook throttle or spam-folder bulk mail."
+        action={
+          records.length ? (
+            <PanelButton
+              label="BIND zone file"
+              title="BIND zone file"
+              description={`Import this into your DNS provider, or add the records by hand.`}
+              width="lg"
+              icon={<FileCode className="size-3.5" strokeWidth={1.75} />}
+            >
+              <div className="space-y-3">
+                <div className="flex gap-2">
+                  <CopyButton value={zone} label="Copy zone file" />
+                  <DownloadButton
+                    content={zone}
+                    filename={`${project.sendingDomain}.zone`}
+                    label="Download .zone"
+                  />
+                </div>
+                <pre className="block w-full max-w-full overflow-x-auto rounded-lg border border-line bg-canvas px-3 py-3 font-mono text-[11.5px] leading-relaxed text-ink-soft">
+                  {zone}
+                </pre>
+                <p className="text-[12.5px] text-ink-muted">
+                  Records SES has not issued yet are left as comments. TTLs are
+                  one hour; lower them while you are still changing records.
+                </p>
+              </div>
+            </PanelButton>
+          ) : null
+        }
       >
         {records.length === 0 ? (
           <SettingRow
@@ -98,7 +139,6 @@ export default async function DomainSettingsPage({
                 <Th>Type</Th>
                 <Th>Name</Th>
                 <Th>Value</Th>
-                <Th />
               </tr>
             </thead>
             <tbody>
@@ -113,14 +153,11 @@ export default async function DomainSettingsPage({
                   <Td>
                     <Mono>{record.type}</Mono>
                   </Td>
-                  <Td className="font-mono text-[11.5px] break-all">
-                    {record.name}
+                  <Td>
+                    <CopyValue value={record.name} />
                   </Td>
-                  <Td className="font-mono text-[11.5px] break-all">
-                    {record.value}
-                  </Td>
-                  <Td className="text-right">
-                    <CopyButton value={record.value} />
+                  <Td>
+                    <CopyValue value={record.value} />
                   </Td>
                 </tr>
               ))}
