@@ -31,6 +31,17 @@ export function requireEnv<K extends keyof AppEnv>(
   return value as NonNullable<AppEnv[K]>;
 }
 
+/**
+ * True only when the app is served from a developer machine. Anything that
+ * would be unsafe to reveal in a browser — like the sign-in code — is gated
+ * on this rather than on whether a mail provider happens to be configured.
+ */
+export function isLocalDeployment(env: AppEnv): boolean {
+  return /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/i.test(
+    (env.APP_URL ?? "").trim(),
+  );
+}
+
 export function isEmailAllowed(env: AppEnv, email: string): boolean {
   const allowed = (env.ALLOWED_EMAILS ?? "")
     .split(",")

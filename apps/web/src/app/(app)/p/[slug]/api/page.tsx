@@ -17,8 +17,6 @@ import {
 import { getDb, getEnv } from "@/lib/cloudflare";
 import { formatDate, requireProject } from "@/lib/projects";
 
-export const instant = false;
-
 export default async function ApiPage({ params }: PageProps<"/p/[slug]/api">) {
   const { slug } = await params;
   const { project } = await requireProject(slug);

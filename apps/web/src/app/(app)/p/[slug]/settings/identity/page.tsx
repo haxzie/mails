@@ -8,8 +8,6 @@ import {
 } from "@/components/shell";
 import { requireProject } from "@/lib/projects";
 
-export const instant = false;
-
 export default async function IdentitySettingsPage({
   params,
 }: PageProps<"/p/[slug]/settings/identity">) {

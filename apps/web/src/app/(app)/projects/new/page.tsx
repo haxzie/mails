@@ -3,8 +3,6 @@ import { ActionForm, SubmitButton } from "@/components/client";
 import { Card, Content, Field, Input, Select, TopBar } from "@/components/shell";
 import { SES_REGIONS } from "@/lib/regions";
 
-export const instant = false;
-
 export default function NewProjectPage() {
   return (
     <>

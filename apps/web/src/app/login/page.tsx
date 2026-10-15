@@ -4,8 +4,6 @@ import { ActionForm, SubmitButton } from "@/components/client";
 import { Field, Input } from "@/components/shell";
 
 export const metadata: Metadata = { title: "Sign in · Mails" };
-export const instant = false;
-
 export default function LoginPage() {
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-sm flex-col justify-center px-6">

@@ -40,8 +40,6 @@ import {
 import { getDb } from "@/lib/cloudflare";
 import { formatDate, formatNumber, requireProject } from "@/lib/projects";
 
-export const instant = false;
-
 export default async function CampaignPage({
   params,
 }: PageProps<"/p/[slug]/campaigns/[id]">) {

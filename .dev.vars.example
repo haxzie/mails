@@ -13,3 +13,8 @@ SNS_WEBHOOK_SECRET="change-me-sns-secret"
 SYSTEM_SES_ACCESS_KEY_ID=""
 SYSTEM_SES_SECRET_ACCESS_KEY=""
 SYSTEM_FROM_EMAIL=""
+
+# Local URLs. The wrangler.jsonc vars hold the deployed ones, and these
+# override them for `next dev` and `wrangler dev`.
+APP_URL="http://localhost:3000"
+API_URL="http://localhost:8787"

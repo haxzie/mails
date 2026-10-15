@@ -61,6 +61,16 @@ pnpm test        # core unit tests
 pnpm --filter @mails/web lint
 ```
 
+The deployed instance lives at <https://mails.haxzie.com>, with the API at
+<https://mails-api.haxzie.com>.
+
+> **Cache Components is off.** `cacheComponents: true` hangs the worker on the
+> Cloudflare runtime — every request 500s with *"your Worker's code had hung"*
+> ([next.js#94880](https://github.com/vercel/next.js/issues/94880),
+> [opennextjs-cloudflare#1450](https://github.com/opennextjs/opennextjs-cloudflare/issues/1450)).
+> Every page here is authenticated and dynamic, so there is no static shell to
+> miss; turn it back on once the bug is fixed.
+
 ## Deploy to Cloudflare
 
 ```bash

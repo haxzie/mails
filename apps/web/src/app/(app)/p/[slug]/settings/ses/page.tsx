@@ -10,8 +10,6 @@ import {
 import { requireProject } from "@/lib/projects";
 import { SES_REGIONS } from "@/lib/regions";
 
-export const instant = false;
-
 export default async function SesSettingsPage({
   params,
 }: PageProps<"/p/[slug]/settings/ses">) {

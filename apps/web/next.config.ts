@@ -2,8 +2,11 @@ import type { NextConfig } from "next";
 import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
 
 const nextConfig: NextConfig = {
-  cacheComponents: true,
-  partialPrefetching: true,
+  // Cache Components hangs the worker on the Cloudflare runtime — every
+  // request 500s with "your Worker's code had hung" (vercel/next.js#94880,
+  // opennextjs-cloudflare#1450). Every page here is authenticated and
+  // dynamic, so there is no static shell to gain by waiting for the fix.
+  cacheComponents: false,
   turbopack: {
     rules: {
       "*.css": {

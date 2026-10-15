@@ -8,8 +8,6 @@ import {
 } from "@/components/shell";
 import { requireProject } from "@/lib/projects";
 
-export const instant = false;
-
 export default async function GeneralSettingsPage({
   params,
 }: PageProps<"/p/[slug]/settings">) {

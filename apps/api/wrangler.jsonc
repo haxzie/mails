@@ -9,8 +9,7 @@
     {
       "binding": "DB",
       "database_name": "mails-db",
-      // Replace with the id printed by `wrangler d1 create mails-db`.
-      "database_id": "REPLACE_WITH_D1_DATABASE_ID",
+      "database_id": "b55c9ae9-daad-42b5-8306-fb5ae0ba787e",
       "migrations_dir": "../../packages/db/migrations"
     }
   ],
@@ -32,11 +31,13 @@
     // Picks up scheduled campaigns every minute.
     "crons": ["* * * * *"]
   },
+  "routes": [{ "pattern": "mails-api.haxzie.com", "custom_domain": true }],
   "vars": {
-    "APP_URL": "http://localhost:3000",
-    "API_URL": "http://localhost:8787",
+    // Local development overrides these in apps/api/.dev.vars.
+    "APP_URL": "https://mails.haxzie.com",
+    "API_URL": "https://mails-api.haxzie.com",
     "ALLOWED_EMAILS": "musthu.gm@gmail.com",
-    "SYSTEM_SES_REGION": "us-east-1",
+    "SYSTEM_SES_REGION": "ap-south-1",
     "SYSTEM_FROM_NAME": "Mails"
   }
 }

@@ -12,3 +12,5 @@ allowBuilds:
 minimumReleaseAgeExclude:
   - miniflare@5.20261012.0-beta
   - wrangler@4.151.0
+  - '@opennextjs/aws@4.1.11'
+  - '@opennextjs/cloudflare@1.20.12'

@@ -2,10 +2,6 @@ import { Sidebar } from "@/components/sidebar";
 import { listProjects } from "@/lib/projects";
 import { requireUser } from "@/lib/session";
 
-// The whole dashboard is per-user and read at request time, so it blocks on
-// the server instead of prerendering a static shell.
-export const instant = false;
-
 export default async function AppLayout({ children }: LayoutProps<"/">) {
   const user = await requireUser();
   const projects = await listProjects(user.id);

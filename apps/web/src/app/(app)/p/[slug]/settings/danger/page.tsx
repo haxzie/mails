@@ -6,8 +6,6 @@ import { Content, SettingRow, SettingsSection } from "@/components/shell";
 import { getDb } from "@/lib/cloudflare";
 import { formatNumber, requireProject } from "@/lib/projects";
 
-export const instant = false;
-
 export default async function DangerSettingsPage({
   params,
 }: PageProps<"/p/[slug]/settings/danger">) {

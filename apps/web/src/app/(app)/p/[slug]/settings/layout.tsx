@@ -1,8 +1,6 @@
 import { SettingsNav } from "@/components/settings-nav";
 import { TopBar } from "@/components/shell";
 
-export const instant = false;
-
 export default async function SettingsLayout({
   children,
   params,

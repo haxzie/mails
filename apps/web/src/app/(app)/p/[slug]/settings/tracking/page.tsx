@@ -8,8 +8,6 @@ import {
 } from "@/components/shell";
 import { requireProject } from "@/lib/projects";
 
-export const instant = false;
-
 export default async function TrackingSettingsPage({
   params,
 }: PageProps<"/p/[slug]/settings/tracking">) {

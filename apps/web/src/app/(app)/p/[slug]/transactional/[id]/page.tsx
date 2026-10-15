@@ -23,8 +23,6 @@ import {
 import { getDb, getEnv } from "@/lib/cloudflare";
 import { requireProject } from "@/lib/projects";
 
-export const instant = false;
-
 export default async function TransactionalDetailPage({
   params,
 }: PageProps<"/p/[slug]/transactional/[id]">) {

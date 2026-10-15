@@ -34,8 +34,6 @@ import {
 import { getEnv } from "@/lib/cloudflare";
 import { requireProject } from "@/lib/projects";
 
-export const instant = false;
-
 export default async function DomainSettingsPage({
   params,
 }: PageProps<"/p/[slug]/settings/domain">) {

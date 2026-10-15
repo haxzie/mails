@@ -14,8 +14,6 @@ import {
 import { getDb } from "@/lib/cloudflare";
 import { formatDate, requireProject } from "@/lib/projects";
 
-export const instant = false;
-
 const STATUSES = [
   "all",
   "queued",

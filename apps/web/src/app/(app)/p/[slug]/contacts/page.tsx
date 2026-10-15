@@ -26,8 +26,6 @@ import {
 import { getDb } from "@/lib/cloudflare";
 import { formatDate, formatNumber, requireProject } from "@/lib/projects";
 
-export const instant = false;
-
 const PAGE_SIZE = 50;
 
 export default async function ContactsPage({

@@ -2,9 +2,9 @@ import { and, eq, gt, isNull, lt } from "drizzle-orm";
 import { loginTokens, sessions, users, type User } from "@mails/db/schema";
 import { createId, type Database } from "@mails/db";
 import { randomCode, randomToken, safeEqual, sha256 } from "./crypto";
-import { isEmailAllowed, type AppEnv } from "./env";
+import { isEmailAllowed, isLocalDeployment, type AppEnv } from "./env";
 import { escapeHtml } from "./render";
-import { db, sendSystemEmail } from "./send";
+import { db, sendSystemEmail, systemSesCredentials } from "./send";
 
 export const SESSION_COOKIE = "mails_session";
 const SESSION_TTL = 1000 * 60 * 60 * 24 * 30; // 30 days
@@ -59,11 +59,18 @@ export async function requestLogin(
 <p style="font:13px/20px -apple-system,sans-serif;color:#777">This link expires in 15 minutes. If you did not request it, ignore this email.</p>`,
   });
 
-  // Returned only so local dev can sign in without a mail provider.
-  const withoutProvider = !env.SYSTEM_SES_ACCESS_KEY_ID;
-  return withoutProvider
-    ? { email, devToken: token, devCode: code }
-    : { email };
+  // Handing the code back is a local-development convenience. On a deployed
+  // instance it would let anyone who knows an allowlisted address sign in, so
+  // it is gated on the app running locally, not on SES being unconfigured.
+  if (isLocalDeployment(env)) {
+    return { email, devToken: token, devCode: code };
+  }
+  if (!systemSesCredentials(env)) {
+    throw new AuthError(
+      "This instance cannot send sign-in emails yet: set the SYSTEM_SES_* secrets.",
+    );
+  }
+  return { email };
 }
 
 async function findOrCreateUser(
