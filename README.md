@@ -232,6 +232,9 @@ Fastmail and La Poste, and Yahoo may show it depending on sending reputation.
 
 Campaign sending is a two-stage queue: `campaign.start` pages through recipients
 200 at a time writing `emails` rows, then each row is queued as `email.send`.
+The audience is frozen when you press send — each page filters on
+`contacts.createdAt <= campaigns.startedAt` — so contacts added while the send
+is still paging (an import, say) are not swept into it.
 Retries are safe — a row that already has a provider message id is never sent
 twice. A cron trigger starts scheduled campaigns every minute and prunes expired
 sessions and login tokens.

@@ -4,6 +4,7 @@ import { and, eq, lte } from "drizzle-orm";
 import { campaigns, loginTokens, sessions } from "@mails/db/schema";
 import { lt } from "drizzle-orm";
 import {
+  NonRetryableSendError,
   bumpCampaignStats,
   createDbFromEnv,
   deliverEmail,
@@ -77,6 +78,13 @@ export default {
         }
         message.ack();
       } catch (error) {
+        if (error instanceof NonRetryableSendError) {
+          // The email, project or campaign is gone — deleting a campaign
+          // mid-send leaves messages like this. Retrying cannot help.
+          console.warn("queue message dropped", message.body, error.message);
+          message.ack();
+          continue;
+        }
         console.error("queue message failed", message.body, error);
         // Exponential-ish backoff, mostly for SES throttling.
         message.retry({ delaySeconds: Math.min(60 * 2 ** message.attempts, 900) });

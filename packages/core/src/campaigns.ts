@@ -1,4 +1,4 @@
-import { and, asc, eq, gt, notExists, sql } from "drizzle-orm";
+import { and, asc, eq, gt, lte, sql } from "drizzle-orm";
 import {
   campaigns,
   contacts,
@@ -58,6 +58,38 @@ export function campaignWarnings(
   return warnings;
 }
 
+/**
+ * Who a campaign goes to.
+ *
+ * `cutoff` freezes the audience at the moment the campaign started: a
+ * campaign materializes its recipients in pages, and without this a contact
+ * created while that loop is running — an import, say — gets swept into a
+ * send it was never part of.
+ */
+export function recipientFilter({
+  projectId,
+  listId,
+  cutoff,
+  after,
+}: {
+  projectId: string;
+  listId?: string | null;
+  cutoff?: Date | null;
+  after?: string | null;
+}) {
+  return and(
+    eq(contacts.projectId, projectId),
+    eq(contacts.subscribed, true),
+    cutoff ? lte(contacts.createdAt, cutoff) : undefined,
+    after ? gt(contacts.id, after) : undefined,
+    sql`not exists (select 1 from ${suppressions} where ${suppressions.projectId} = ${projectId} and ${suppressions.email} = ${contacts.email})`,
+    listId
+      ? sql`exists (select 1 from ${listMembers} where ${listMembers.contactId} = ${contacts.id} and ${listMembers.listId} = ${listId})`
+      : undefined,
+  );
+}
+
+/** The live size of an audience, for the editor's "N recipients" line. */
 export async function countRecipients(
   database: Database,
   projectId: string,
@@ -66,34 +98,8 @@ export async function countRecipients(
   const [row] = await database
     .select({ count: sql<number>`count(*)` })
     .from(contacts)
-    .where(
-      and(
-        eq(contacts.projectId, projectId),
-        eq(contacts.subscribed, true),
-        notSuppressed(database, projectId),
-        inList(database, listId),
-      ),
-    );
+    .where(recipientFilter({ projectId, listId }));
   return row?.count ?? 0;
-}
-
-function notSuppressed(database: Database, projectId: string) {
-  return notExists(
-    database
-      .select({ one: sql`1` })
-      .from(suppressions)
-      .where(
-        and(
-          eq(suppressions.projectId, projectId),
-          eq(suppressions.email, contacts.email),
-        ),
-      ),
-  );
-}
-
-function inList(database: Database, listId: string | null) {
-  if (!listId) return undefined;
-  return sql`exists (select 1 from ${listMembers} where ${listMembers.contactId} = ${contacts.id} and ${listMembers.listId} = ${listId})`;
 }
 
 /** Moves a campaign into `sending` and kicks off recipient materialization. */
@@ -135,19 +141,19 @@ export async function materializeRecipients(
   const campaign = await database.query.campaigns.findFirst({
     where: eq(campaigns.id, campaignId),
   });
+  // A deleted or stopped campaign must not keep paging through contacts.
   if (!campaign || campaign.status !== "sending") return null;
 
   const rows = await database
     .select({ id: contacts.id, email: contacts.email })
     .from(contacts)
     .where(
-      and(
-        eq(contacts.projectId, campaign.projectId),
-        eq(contacts.subscribed, true),
-        cursor ? gt(contacts.id, cursor) : undefined,
-        notSuppressed(database, campaign.projectId),
-        inList(database, campaign.listId),
-      ),
+      recipientFilter({
+        projectId: campaign.projectId,
+        listId: campaign.listId,
+        cutoff: campaign.startedAt ?? new Date(),
+        after: cursor,
+      }),
     )
     .orderBy(asc(contacts.id))
     .limit(BATCH);
