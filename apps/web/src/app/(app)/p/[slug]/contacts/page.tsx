@@ -1,4 +1,4 @@
-import { and, desc, eq, like, or, sql } from "drizzle-orm";
+import { and, desc, eq, exists, like, or, sql } from "drizzle-orm";
 import { Plus } from "lucide-react";
 import { contacts, listMembers, lists } from "@mails/db/schema";
 import {
@@ -49,16 +49,32 @@ export default async function ContactsPage({
         like(contacts.lastName, `%${search}%`),
       )
     : undefined;
+  // A correlated subquery, not the relational query builder: findMany()
+  // aliases the outer table and rewrites every column in a raw `sql`
+  // fragment to that alias, which breaks the join back to list_members.
   const listCondition = listFilter
-    ? sql`exists (select 1 from ${listMembers} where ${listMembers.contactId} = ${contacts.id} and ${listMembers.listId} = ${listFilter})`
+    ? exists(
+        db
+          .select({ one: sql`1` })
+          .from(listMembers)
+          .where(
+            and(
+              eq(listMembers.contactId, contacts.id),
+              eq(listMembers.listId, listFilter),
+            ),
+          ),
+      )
     : undefined;
 
   const [rows, projectLists, totals] = await Promise.all([
-    db.query.contacts.findMany({
-      where: and(eq(contacts.projectId, project.id), searchFilter, listCondition),
-      orderBy: desc(contacts.createdAt),
-      limit: PAGE_SIZE,
-    }),
+    db
+      .select()
+      .from(contacts)
+      .where(
+        and(eq(contacts.projectId, project.id), searchFilter, listCondition),
+      )
+      .orderBy(desc(contacts.createdAt))
+      .limit(PAGE_SIZE),
     db
       .select({
         id: lists.id,
