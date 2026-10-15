@@ -11,6 +11,8 @@ import { Textarea as ShadTextarea } from "@/components/ui/textarea";
 /** Alias kept so existing call sites don't all have to change. */
 export const cx = cn;
 
+export { Select } from "./select";
+
 type Variant = "primary" | "secondary" | "ghost" | "danger" | "accent";
 type Size = "sm" | "md";
 
@@ -335,24 +337,6 @@ export function Input({ className, ...props }: ComponentProps<"input">) {
 
 export function Textarea({ className, ...props }: ComponentProps<"textarea">) {
   return <ShadTextarea className={cn("text-[13.5px]", className)} {...props} />;
-}
-
-/**
- * A native <select>, styled like the shadcn input. Server actions read it
- * straight out of the submitted FormData, which the Radix select can only
- * do through a hidden mirror.
- */
-export function Select({ className, ...props }: ComponentProps<"select">) {
-  return (
-    <select
-      data-slot="select"
-      className={cn(
-        "h-9 w-full appearance-none rounded-lg border border-input bg-surface bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20stroke%3D%22%238a8d98%22%20stroke-width%3D%221.5%22%3E%3Cpath%20d%3D%22m4%206%204%204%204-4%22%2F%3E%3C%2Fsvg%3E')] bg-[length:16px_16px] bg-[right_0.6rem_center] bg-no-repeat px-2.5 py-1 pr-8 text-[13.5px] outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50",
-        className,
-      )}
-      {...props}
-    />
-  );
 }
 
 export function Checkbox({

@@ -85,17 +85,35 @@ export async function updateProjectAction(
     patch.sesRegion = text("sesRegion") || project.sesRegion;
   }
   if (formData.has("sesAccessKeyId")) {
-    patch.sesAccessKeyId = text("sesAccessKeyId") || null;
+    const accessKeyId = text("sesAccessKeyId");
+    if (accessKeyId && !/^[A-Z0-9]{16,128}$/.test(accessKeyId)) {
+      return {
+        error:
+          "That access key id does not look like an AWS one. Check the field — browsers sometimes autofill it.",
+      };
+    }
+    patch.sesAccessKeyId = accessKeyId || null;
   }
   // An empty secret field keeps the stored key instead of wiping it.
-  if (text("sesSecretKey")) {
-    patch.sesSecretKey = await encryptSecret(
-      text("sesSecretKey"),
-      env.ENCRYPTION_KEY,
-    );
+  const secret = text("sesSecretKey");
+  if (secret) {
+    if (!/^[A-Za-z0-9/+=]{40}$/.test(secret)) {
+      return {
+        error:
+          "An AWS secret access key is 40 characters. Nothing was saved — if your password manager filled this field, clear it first.",
+      };
+    }
+    patch.sesSecretKey = await encryptSecret(secret, env.ENCRYPTION_KEY);
   }
   if (formData.has("sesConfigurationSet")) {
-    patch.sesConfigurationSet = text("sesConfigurationSet") || null;
+    const configurationSet = text("sesConfigurationSet");
+    if (configurationSet && !/^[\w-]{1,64}$/.test(configurationSet)) {
+      return {
+        error:
+          "A configuration set name can only contain letters, numbers, dashes and underscores.",
+      };
+    }
+    patch.sesConfigurationSet = configurationSet || null;
   }
   if (formData.has("sendRate")) {
     patch.sendRate = Math.max(1, Number(formData.get("sendRate") ?? 10));

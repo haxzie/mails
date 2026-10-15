@@ -18,10 +18,8 @@ export async function createApiKeyAction(
   const db = await getDb();
   const key = await createApiKey(db, project.id, name);
   revalidatePath(`/p/${slug}/api`);
-  // The plaintext key is shown once, in the action result.
-  return {
-    success: `${key.key} — copy it now, it is hashed and never shown again.`,
-  };
+  // The plaintext key exists only here; the row stores a hash of it.
+  return { success: "API key created", value: key.key };
 }
 
 export async function revokeApiKeyAction(formData: FormData): Promise<void> {

@@ -42,13 +42,18 @@ export function SubmitButton({
 export function CopyButton({
   value,
   label = "Copy",
+  variant = "secondary",
+  size = "sm",
 }: {
   value: string;
   label?: string;
+  variant?: ButtonVariant;
+  size?: "sm" | "md";
 }) {
   const [copied, copy] = useCopy(value);
   return (
-    <button type="button" className={buttonClass("secondary", "sm")} onClick={copy}>
+    <button type="button" className={buttonClass(variant, size)} onClick={copy}>
+      {copied ? <Check className="size-3.5" strokeWidth={2} /> : <Copy className="size-3.5" strokeWidth={1.75} />}
       {copied ? "Copied" : label}
     </button>
   );
@@ -153,7 +158,12 @@ export function FormMessage({
   );
 }
 
-export type ActionState = { error?: string; success?: string } | null;
+export type ActionState = {
+  error?: string;
+  success?: string;
+  /** A one-time secret the caller renders itself, e.g. a fresh API key. */
+  value?: string;
+} | null;
 
 /**
  * A form bound to a server action that renders the action's result inline,

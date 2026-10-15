@@ -48,6 +48,10 @@ export default async function SesSettingsPage({
               name="sesConfigurationSet"
               defaultValue={project.sesConfigurationSet ?? ""}
               placeholder="mails-events"
+              autoComplete="off"
+              data-1p-ignore
+              data-lpignore="true"
+              spellCheck={false}
             />
           </SettingRow>
 
@@ -60,6 +64,9 @@ export default async function SesSettingsPage({
               defaultValue={project.sesAccessKeyId ?? ""}
               placeholder="AKIA…"
               autoComplete="off"
+              data-1p-ignore
+              data-lpignore="true"
+              spellCheck={false}
             />
           </SettingRow>
 
@@ -75,7 +82,11 @@ export default async function SesSettingsPage({
               name="sesSecretKey"
               type="password"
               placeholder={project.sesSecretKey ? "••••••••" : ""}
-              autoComplete="off"
+              // "new-password" is what keeps Chrome from offering a saved
+              // login here; plain "off" is ignored for password inputs.
+              autoComplete="new-password"
+              data-1p-ignore
+              data-lpignore="true"
             />
           </SettingRow>
 

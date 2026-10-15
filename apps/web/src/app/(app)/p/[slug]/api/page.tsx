@@ -1,15 +1,13 @@
 import { desc, eq } from "drizzle-orm";
-import { BookOpen, Plus } from "lucide-react";
+import { BookOpen } from "lucide-react";
 import { apiKeys } from "@mails/db/schema";
-import { createApiKeyAction, revokeApiKeyAction } from "@/app/actions/keys";
+import { revokeApiKeyAction } from "@/app/actions/keys";
 import { SubmitButton } from "@/components/client";
-import { ModalButton, ModalCancel, ModalForm } from "@/components/modal";
+import { NewApiKeyModal } from "@/components/api-key-modal";
 import { PanelButton } from "@/components/panel";
 import {
   Badge,
   EmptyState,
-  Field,
-  Input,
   Mono,
   Table,
   Td,
@@ -154,27 +152,7 @@ export default async function ApiPage({ params }: PageProps<"/p/[slug]/api">) {
               </div>
             </PanelButton>
 
-            <ModalButton
-              label="New key"
-              title="New API key"
-              description="The full key is shown once, right after you create it."
-              icon={<Plus className="size-3.5" strokeWidth={2} />}
-            >
-              <ModalForm
-                action={createApiKeyAction}
-                className="space-y-3"
-                keepOpenOnSuccess
-              >
-                <input type="hidden" name="slug" value={slug} />
-                <Field label="Name">
-                  <Input name="name" placeholder="Production backend" autoFocus />
-                </Field>
-                <div className="flex gap-2 pt-1">
-                  <SubmitButton>Create key</SubmitButton>
-                  <ModalCancel />
-                </div>
-              </ModalForm>
-            </ModalButton>
+            <NewApiKeyModal slug={slug} />
           </>
         }
       />
