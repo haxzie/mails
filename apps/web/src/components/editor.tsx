@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { cx } from "./ui";
+import { cx } from "./shell";
 
 /**
  * HTML body editor with a live preview. The preview renders in a sandboxed

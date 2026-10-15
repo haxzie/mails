@@ -2,7 +2,7 @@
 
 import { useActionState, useState, type ReactNode } from "react";
 import { useFormStatus } from "react-dom";
-import { buttonClass, cx, type ButtonVariant } from "./ui";
+import { buttonClass, cx, type ButtonVariant } from "./shell";
 
 export function SubmitButton({
   children,

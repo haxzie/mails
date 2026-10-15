@@ -20,6 +20,7 @@ import {
 import { FunnelBars, SERIES_COLORS } from "@/components/chart";
 import { ActionForm, SubmitButton } from "@/components/client";
 import { HtmlEditor } from "@/components/editor";
+import { ModalButton, ModalCancel, ModalForm } from "@/components/modal";
 import {
   Callout,
   Card,
@@ -35,7 +36,7 @@ import {
   Textarea,
   Th,
   TopBar,
-} from "@/components/ui";
+} from "@/components/shell";
 import { getDb } from "@/lib/cloudflare";
 import { formatDate, formatNumber, requireProject } from "@/lib/projects";
 
@@ -79,13 +80,13 @@ export default async function CampaignPage({
             ? (projectLists.find((list) => list.id === campaign.listId)?.name ??
               "Deleted list")
             : "Everyone subscribed"
-        } · ${formatNumber(recipients)} recipient(s) right now`}
+        } · ${formatNumber(recipients)} recipient(s)`}
         action={
           <>
             <form action={duplicateCampaignAction}>
               <input type="hidden" name="slug" value={slug} />
               <input type="hidden" name="id" value={campaign.id} />
-              <SubmitButton variant="secondary" size="sm">
+              <SubmitButton variant="ghost" size="sm">
                 Duplicate
               </SubmitButton>
             </form>
@@ -93,47 +94,187 @@ export default async function CampaignPage({
               <input type="hidden" name="slug" value={slug} />
               <input type="hidden" name="id" value={campaign.id} />
               <SubmitButton
-                variant="danger"
+                variant="ghost"
                 size="sm"
                 confirm={`Delete “${campaign.name}”?`}
               >
                 Delete
               </SubmitButton>
             </form>
+
+            <ModalButton
+              label="Send test"
+              title="Send a test"
+              description="Goes out immediately, skipping consent checks."
+              variant="secondary"
+            >
+              <ModalForm action={sendTestAction} className="space-y-3">
+                <input type="hidden" name="slug" value={slug} />
+                <input type="hidden" name="id" value={campaign.id} />
+                <Field label="Test recipient">
+                  <Input
+                    name="to"
+                    type="email"
+                    placeholder="you@example.com"
+                    autoFocus
+                  />
+                </Field>
+                <div className="flex gap-2 pt-1">
+                  <SubmitButton>Send test</SubmitButton>
+                  <ModalCancel />
+                </div>
+              </ModalForm>
+            </ModalButton>
+
+            {editable ? (
+              <ModalButton
+                label="Send"
+                title="Send campaign"
+                description={`${formatNumber(
+                  recipients,
+                )} subscribed contact(s) will receive this.`}
+                variant="accent"
+              >
+                {problems.length ? (
+                  <Callout tone="danger" title="Not ready to send">
+                    <ul className="mt-1 list-disc space-y-0.5 pl-4">
+                      {problems.map((problem) => (
+                        <li key={problem}>{problem}</li>
+                      ))}
+                    </ul>
+                  </Callout>
+                ) : (
+                  <ModalForm action={sendCampaignAction} className="space-y-3">
+                    <input type="hidden" name="slug" value={slug} />
+                    <input type="hidden" name="id" value={campaign.id} />
+                    <Field
+                      label="Schedule for later"
+                      hint="Leave empty to start sending immediately."
+                    >
+                      <Input
+                        name="scheduledAt"
+                        type="datetime-local"
+                        defaultValue={
+                          campaign.scheduledAt
+                            ? toLocalInput(campaign.scheduledAt)
+                            : ""
+                        }
+                      />
+                    </Field>
+                    <div className="flex gap-2 pt-1">
+                      <SubmitButton
+                        variant="accent"
+                        confirm={`Send “${campaign.name}” to ${recipients} contact(s)?`}
+                      >
+                        Send campaign
+                      </SubmitButton>
+                      <ModalCancel />
+                    </div>
+                  </ModalForm>
+                )}
+
+                {campaign.status === "scheduled" ? (
+                  <form action={unscheduleCampaignAction} className="mt-4 border-t border-line pt-3">
+                    <input type="hidden" name="slug" value={slug} />
+                    <input type="hidden" name="id" value={campaign.id} />
+                    <p className="mb-2 text-[12.5px] text-ink-muted">
+                      Scheduled for {formatDate(campaign.scheduledAt)}.
+                    </p>
+                    <SubmitButton variant="secondary" size="sm">
+                      Cancel schedule
+                    </SubmitButton>
+                  </form>
+                ) : null}
+              </ModalButton>
+            ) : null}
           </>
         }
       />
 
-      <Content>
-      {started ? (
-        <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-4">
-          <StatTile
-            label="Sent"
-            value={formatNumber(stats.sent)}
-            sub={`${formatNumber(stats.queued)} queued`}
-            swatch={SERIES_COLORS.sent}
-          />
-          <StatTile
-            label="Delivered"
-            value={`${rate(stats.delivered, stats.sent)}%`}
-            sub={formatNumber(stats.delivered)}
-          />
-          <StatTile
-            label="Opened"
-            value={`${rate(stats.opened, stats.sent)}%`}
-            sub={formatNumber(stats.opened)}
-            swatch={SERIES_COLORS.opened}
-          />
-          <StatTile
-            label="Clicked"
-            value={`${rate(stats.clicked, stats.sent)}%`}
-            sub={formatNumber(stats.clicked)}
-            swatch={SERIES_COLORS.clicked}
-          />
-        </div>
-      ) : null}
+      <Content className="space-y-5">
+        {problems.length || warnings.length ? (
+          <div className="grid gap-3 md:grid-cols-2">
+            {problems.length ? (
+              <Callout tone="danger" title="Not ready to send">
+                <ul className="mt-1 list-disc space-y-0.5 pl-4">
+                  {problems.map((problem) => (
+                    <li key={problem}>{problem}</li>
+                  ))}
+                </ul>
+              </Callout>
+            ) : null}
+            {warnings.length ? (
+              <Callout tone="warning" title="Deliverability checks">
+                <ul className="mt-1 list-disc space-y-0.5 pl-4">
+                  {warnings.map((warning) => (
+                    <li key={warning}>{warning}</li>
+                  ))}
+                </ul>
+              </Callout>
+            ) : null}
+          </div>
+        ) : null}
 
-      <div className="grid gap-5 lg:grid-cols-[1fr_320px]">
+        {started ? (
+          <>
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+              <StatTile
+                label="Sent"
+                value={formatNumber(stats.sent)}
+                sub={`${formatNumber(stats.queued)} queued`}
+                swatch={SERIES_COLORS.sent}
+              />
+              <StatTile
+                label="Delivered"
+                value={`${rate(stats.delivered, stats.sent)}%`}
+                sub={formatNumber(stats.delivered)}
+              />
+              <StatTile
+                label="Opened"
+                value={`${rate(stats.opened, stats.sent)}%`}
+                sub={formatNumber(stats.opened)}
+                swatch={SERIES_COLORS.opened}
+              />
+              <StatTile
+                label="Clicked"
+                value={`${rate(stats.clicked, stats.sent)}%`}
+                sub={formatNumber(stats.clicked)}
+                swatch={SERIES_COLORS.clicked}
+              />
+            </div>
+
+            <Card className="p-5">
+              <FunnelBars
+                rows={[
+                  {
+                    label: "Delivered",
+                    value: stats.delivered,
+                    total: stats.sent,
+                    color: SERIES_COLORS.sent,
+                  },
+                  {
+                    label: "Opened",
+                    value: stats.opened,
+                    total: stats.sent,
+                    color: SERIES_COLORS.opened,
+                  },
+                  {
+                    label: "Clicked",
+                    value: stats.clicked,
+                    total: stats.sent,
+                    color: SERIES_COLORS.clicked,
+                  },
+                ]}
+              />
+              <p className="mt-4 text-[12px] text-ink-muted">
+                {formatNumber(stats.bounced)} bounced ·{" "}
+                {formatNumber(stats.complained)} complained ·{" "}
+                {formatNumber(stats.failed)} failed
+              </p>
+            </Card>
+          </>
+        ) : null}
+
         <Card>
           <CardHeader
             title="Content"
@@ -187,14 +328,20 @@ export default async function CampaignPage({
             </Field>
 
             <div className="grid gap-3 md:grid-cols-2">
-              <Field label="From name" hint={`Defaults to “${project.fromName || project.name}”`}>
+              <Field
+                label="From name"
+                hint={`Defaults to “${project.fromName || project.name}”`}
+              >
                 <Input
                   name="fromName"
                   defaultValue={campaign.fromName ?? ""}
                   disabled={!editable}
                 />
               </Field>
-              <Field label="From email" hint={`Defaults to ${project.fromEmail || "unset"}`}>
+              <Field
+                label="From email"
+                hint={`Defaults to ${project.fromEmail || "unset"}`}
+              >
                 <Input
                   name="fromEmail"
                   type="email"
@@ -228,149 +375,41 @@ export default async function CampaignPage({
           </ActionForm>
         </Card>
 
-        <div className="space-y-5">
-          {problems.length ? (
-            <Callout tone="danger" title="Not ready to send">
-              <ul className="mt-1 list-disc space-y-0.5 pl-4">
-                {problems.map((problem) => (
-                  <li key={problem}>{problem}</li>
-                ))}
-              </ul>
-            </Callout>
-          ) : null}
-          {warnings.length ? (
-            <Callout tone="warning" title="Deliverability checks">
-              <ul className="mt-1 list-disc space-y-0.5 pl-4">
-                {warnings.map((warning) => (
-                  <li key={warning}>{warning}</li>
-                ))}
-              </ul>
-            </Callout>
-          ) : null}
-
+        {recentEmails.length ? (
           <Card>
-            <CardHeader title="Send a test" />
-            <ActionForm action={sendTestAction} className="space-y-3 p-5">
-              <input type="hidden" name="slug" value={slug} />
-              <input type="hidden" name="id" value={campaign.id} />
-              <Field label="Test recipient">
-                <Input name="to" type="email" placeholder="you@example.com" />
-              </Field>
-              <SubmitButton variant="secondary">Send test</SubmitButton>
-            </ActionForm>
-          </Card>
-
-          {editable ? (
-            <Card>
-              <CardHeader
-                title="Send"
-                description={`${formatNumber(recipients)} subscribed contact(s) will receive this.`}
-              />
-              <ActionForm action={sendCampaignAction} className="space-y-3 p-5">
-                <input type="hidden" name="slug" value={slug} />
-                <input type="hidden" name="id" value={campaign.id} />
-                <Field
-                  label="Schedule for later"
-                  hint="Leave empty to start sending immediately."
+            <CardHeader
+              title="Recent recipients"
+              action={
+                <Link
+                  href={`/p/${slug}/logs?campaign=${campaign.id}`}
+                  className="text-[12.5px] text-brand hover:underline"
                 >
-                  <Input
-                    name="scheduledAt"
-                    type="datetime-local"
-                    defaultValue={
-                      campaign.scheduledAt
-                        ? toLocalInput(campaign.scheduledAt)
-                        : ""
-                    }
-                  />
-                </Field>
-                <SubmitButton
-                  variant="accent"
-                  className="w-full"
-                  confirm={`Send “${campaign.name}” to ${recipients} contact(s)?`}
-                >
-                  Send campaign
-                </SubmitButton>
-              </ActionForm>
-              {campaign.status === "scheduled" ? (
-                <form action={unscheduleCampaignAction} className="px-5 pb-5">
-                  <input type="hidden" name="slug" value={slug} />
-                  <input type="hidden" name="id" value={campaign.id} />
-                  <p className="mb-2 text-[12.5px] text-ink-muted">
-                    Scheduled for {formatDate(campaign.scheduledAt)}.
-                  </p>
-                  <SubmitButton variant="secondary" size="sm">
-                    Cancel schedule
-                  </SubmitButton>
-                </form>
-              ) : null}
-            </Card>
-          ) : (
-            <Card className="p-5">
-              <FunnelBars
-                rows={[
-                  {
-                    label: "Delivered",
-                    value: stats.delivered,
-                    total: stats.sent,
-                    color: SERIES_COLORS.sent,
-                  },
-                  {
-                    label: "Opened",
-                    value: stats.opened,
-                    total: stats.sent,
-                    color: SERIES_COLORS.opened,
-                  },
-                  {
-                    label: "Clicked",
-                    value: stats.clicked,
-                    total: stats.sent,
-                    color: SERIES_COLORS.clicked,
-                  },
-                ]}
-              />
-              <p className="mt-4 text-[12px] text-ink-muted">
-                {formatNumber(stats.bounced)} bounced ·{" "}
-                {formatNumber(stats.complained)} complained ·{" "}
-                {formatNumber(stats.failed)} failed
-              </p>
-            </Card>
-          )}
-
-          {recentEmails.length ? (
-            <Card>
-              <CardHeader
-                title="Recent recipients"
-                action={
-                  <Link
-                    href={`/p/${slug}/logs?campaign=${campaign.id}`}
-                    className="text-[12.5px] text-accent hover:underline"
-                  >
-                    View all
-                  </Link>
-                }
-              />
-              <Table>
-                <thead>
-                  <tr>
-                    <Th>To</Th>
-                    <Th className="text-right">Status</Th>
+                  View all
+                </Link>
+              }
+            />
+            <Table>
+              <thead>
+                <tr>
+                  <Th>To</Th>
+                  <Th>Subject</Th>
+                  <Th className="text-right">Status</Th>
+                </tr>
+              </thead>
+              <tbody>
+                {recentEmails.map((email) => (
+                  <tr key={email.id}>
+                    <Td className="font-medium">{email.to}</Td>
+                    <Td className="text-ink-soft">{email.subject}</Td>
+                    <Td className="text-right">
+                      <StatusBadge status={email.status} />
+                    </Td>
                   </tr>
-                </thead>
-                <tbody>
-                  {recentEmails.map((email) => (
-                    <tr key={email.id}>
-                      <Td className="truncate-id">{email.to}</Td>
-                      <Td className="text-right">
-                        <StatusBadge status={email.status} />
-                      </Td>
-                    </tr>
-                  ))}
-                </tbody>
-              </Table>
-            </Card>
-          ) : null}
-        </div>
-      </div>
+                ))}
+              </tbody>
+            </Table>
+          </Card>
+        ) : null}
       </Content>
     </>
   );

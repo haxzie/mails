@@ -8,6 +8,7 @@ import {
 } from "@/app/actions/transactional";
 import { ActionForm, SubmitButton } from "@/components/client";
 import { HtmlEditor } from "@/components/editor";
+import { ModalButton, ModalCancel, ModalForm } from "@/components/modal";
 import {
   Callout,
   Card,
@@ -18,7 +19,7 @@ import {
   Input,
   Textarea,
   TopBar,
-} from "@/components/ui";
+} from "@/components/shell";
 import { getDb, getEnv } from "@/lib/cloudflare";
 import { requireProject } from "@/lib/projects";
 
@@ -46,21 +47,67 @@ export default async function TransactionalDetailPage({
         title={template.name}
         description={`Triggered by “${template.event}”`}
         action={
-          <form action={deleteTransactionalAction}>
-            <input type="hidden" name="slug" value={slug} />
-            <input type="hidden" name="id" value={template.id} />
-            <SubmitButton
-              variant="danger"
-              size="sm"
-              confirm={`Delete “${template.name}”?`}
+          <>
+            <form action={deleteTransactionalAction}>
+              <input type="hidden" name="slug" value={slug} />
+              <input type="hidden" name="id" value={template.id} />
+              <SubmitButton
+                variant="ghost"
+                size="sm"
+                confirm={`Delete “${template.name}”?`}
+              >
+                Delete
+              </SubmitButton>
+            </form>
+
+            <ModalButton
+              label="Trigger example"
+              title="Trigger this template"
+              variant="secondary"
+              width="md"
             >
-              Delete
-            </SubmitButton>
-          </form>
+              <pre className="overflow-x-auto rounded-lg bg-canvas px-3 py-3 font-mono text-[11.5px] leading-relaxed text-ink-soft">
+{`curl -X POST ${env.API_URL}/v1/events \\
+  -H "Authorization: Bearer $MAILS_API_KEY" \\
+  -H "content-type: application/json" \\
+  -d '{"event":"${template.event}","email":"ada@example.com"}'`}
+              </pre>
+            </ModalButton>
+
+            <ModalButton
+              label="Send test"
+              title="Send a test"
+              description="Rendered with empty merge data unless the contact exists."
+            >
+              <ModalForm action={testTransactionalAction} className="space-y-3">
+                <input type="hidden" name="slug" value={slug} />
+                <input type="hidden" name="id" value={template.id} />
+                <Field label="Test recipient">
+                  <Input
+                    name="to"
+                    type="email"
+                    placeholder="you@example.com"
+                    autoFocus
+                  />
+                </Field>
+                <div className="flex gap-2 pt-1">
+                  <SubmitButton>Send test</SubmitButton>
+                  <ModalCancel />
+                </div>
+              </ModalForm>
+            </ModalButton>
+          </>
         }
       />
 
-      <Content className="grid gap-5 lg:grid-cols-[1fr_320px]">
+      <Content className="space-y-5">
+        {template.ignoreUnsubscribes ? (
+          <Callout tone="warning" title="No unsubscribe link">
+            This template skips consent checks and is sent without an
+            unsubscribe footer. Only use it for mail a user asked for.
+          </Callout>
+        ) : null}
+
         <Card>
           <CardHeader title="Content" />
           <ActionForm action={saveTransactionalAction} className="space-y-4 p-5">
@@ -115,37 +162,6 @@ export default async function TransactionalDetailPage({
             <SubmitButton>Save changes</SubmitButton>
           </ActionForm>
         </Card>
-
-        <div className="space-y-5">
-          <Card>
-            <CardHeader title="Send a test" />
-            <ActionForm action={testTransactionalAction} className="space-y-3 p-5">
-              <input type="hidden" name="slug" value={slug} />
-              <input type="hidden" name="id" value={template.id} />
-              <Field label="Test recipient">
-                <Input name="to" type="email" placeholder="you@example.com" />
-              </Field>
-              <SubmitButton variant="secondary">Send test</SubmitButton>
-            </ActionForm>
-          </Card>
-
-          {template.ignoreUnsubscribes ? (
-            <Callout tone="warning" title="No unsubscribe link">
-              This template skips consent checks and is sent without an
-              unsubscribe footer. Only use it for mail a user asked for.
-            </Callout>
-          ) : null}
-
-          <Card>
-            <CardHeader title="Trigger" />
-            <pre className="overflow-x-auto px-5 py-4 font-mono text-[11.5px] leading-relaxed text-ink-soft">
-{`curl -X POST ${env.API_URL}/v1/events \\
-  -H "Authorization: Bearer $MAILS_API_KEY" \\
-  -H "content-type: application/json" \\
-  -d '{"event":"${template.event}","email":"ada@example.com"}'`}
-            </pre>
-          </Card>
-        </div>
       </Content>
     </>
   );

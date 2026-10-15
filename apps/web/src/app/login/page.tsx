@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { requestLoginAction } from "@/app/actions/auth";
 import { ActionForm, SubmitButton } from "@/components/client";
-import { Field, Input } from "@/components/ui";
+import { Field, Input } from "@/components/shell";
 
 export const metadata: Metadata = { title: "Sign in · Mails" };
 export const instant = false;

@@ -1,35 +1,42 @@
 import Link from "next/link";
 import type { ComponentProps, ReactNode } from "react";
+import { cn } from "@/lib/utils";
+import { Button as ShadButton, buttonVariants } from "@/components/ui/button";
+import { Checkbox as ShadCheckbox } from "@/components/ui/checkbox";
+import { Input as ShadInput } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea as ShadTextarea } from "@/components/ui/textarea";
 
-export function cx(...values: Array<string | false | null | undefined>) {
-  return values.filter(Boolean).join(" ");
-}
+/** Alias kept so existing call sites don't all have to change. */
+export const cx = cn;
 
-const buttonBase =
-  "inline-flex items-center justify-center gap-1.5 rounded-lg text-[13px] font-medium transition-colors disabled:opacity-50 disabled:pointer-events-none";
+type Variant = "primary" | "secondary" | "ghost" | "danger" | "accent";
+type Size = "sm" | "md";
 
-const buttonSizes = {
-  sm: "h-7 px-2.5",
-  md: "h-9 px-3.5",
-};
+/** Maps our semantic names onto the shadcn button variants. */
+const VARIANTS: Record<Variant, "default" | "outline" | "ghost" | "destructive"> =
+  {
+    primary: "default",
+    accent: "default",
+    secondary: "outline",
+    ghost: "ghost",
+    danger: "destructive",
+  };
 
-const buttonVariants = {
-  primary: "bg-ink text-white hover:bg-ink/90",
-  accent: "bg-accent text-white hover:bg-accent/90",
-  secondary:
-    "bg-surface text-ink border border-line-strong hover:bg-canvas shadow-[0_1px_1px_rgba(0,0,0,0.02)]",
-  ghost: "text-ink-soft hover:bg-canvas hover:text-ink",
-  danger: "bg-negative-soft text-negative border border-negative/20 hover:bg-negative/10",
-};
+const SIZES: Record<Size, "sm" | "default"> = { sm: "sm", md: "default" };
 
-export type ButtonVariant = keyof typeof buttonVariants;
+export type ButtonVariant = Variant;
 
 export function buttonClass(
-  variant: ButtonVariant = "primary",
-  size: keyof typeof buttonSizes = "md",
+  variant: Variant = "primary",
+  size: Size = "md",
   className?: string,
 ) {
-  return cx(buttonBase, buttonSizes[size], buttonVariants[variant], className);
+  return cn(
+    buttonVariants({ variant: VARIANTS[variant], size: SIZES[size] }),
+    variant === "accent" && "bg-brand text-white hover:bg-brand/90",
+    className,
+  );
 }
 
 export function Button({
@@ -37,11 +44,21 @@ export function Button({
   size = "md",
   className,
   ...props
-}: ComponentProps<"button"> & {
-  variant?: ButtonVariant;
-  size?: keyof typeof buttonSizes;
+}: Omit<ComponentProps<typeof ShadButton>, "variant" | "size"> & {
+  variant?: Variant;
+  size?: Size;
 }) {
-  return <button className={buttonClass(variant, size, className)} {...props} />;
+  return (
+    <ShadButton
+      variant={VARIANTS[variant]}
+      size={SIZES[size]}
+      className={cn(
+        variant === "accent" && "bg-brand text-white hover:bg-brand/90",
+        className,
+      )}
+      {...props}
+    />
+  );
 }
 
 export function ButtonLink({
@@ -49,10 +66,7 @@ export function ButtonLink({
   size = "md",
   className,
   ...props
-}: ComponentProps<typeof Link> & {
-  variant?: ButtonVariant;
-  size?: keyof typeof buttonSizes;
-}) {
+}: ComponentProps<typeof Link> & { variant?: Variant; size?: Size }) {
   return <Link className={buttonClass(variant, size, className)} {...props} />;
 }
 
@@ -130,6 +144,58 @@ export function TopBar({
   );
 }
 
+/**
+ * The secondary bar under the top bar: filter tabs on the left, an optional
+ * control (search, sort) on the right.
+ */
+export function FilterBar({
+  children,
+  action,
+}: {
+  children: ReactNode;
+  action?: ReactNode;
+}) {
+  return (
+    <div className="flex h-10 items-center gap-1 border-b border-line px-3">
+      <div className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto">
+        {children}
+      </div>
+      {action ? <div className="flex shrink-0 items-center gap-2">{action}</div> : null}
+    </div>
+  );
+}
+
+/** One tab inside a <FilterBar>. */
+export function FilterTab({
+  href,
+  active,
+  count,
+  children,
+}: {
+  href: string;
+  active?: boolean;
+  count?: number;
+  children: ReactNode;
+}) {
+  return (
+    <a
+      href={href}
+      aria-current={active ? "page" : undefined}
+      className={cx(
+        "flex shrink-0 items-center gap-1.5 rounded-md px-2 py-1 text-[12.5px] transition-colors",
+        active
+          ? "bg-active font-medium text-ink"
+          : "text-ink-muted hover:bg-hover hover:text-ink",
+      )}
+    >
+      {children}
+      {count === undefined ? null : (
+        <span className="tabular-nums text-ink-muted">{count}</span>
+      )}
+    </a>
+  );
+}
+
 /** Padded body of a page, below the top bar. */
 export function Content({
   children,
@@ -171,48 +237,50 @@ export function Field({
   className?: string;
 }) {
   return (
-    <label className={cx("block", className)}>
-      <span className="mb-1.5 block text-[12.5px] font-medium text-ink-soft">
-        {label}
-      </span>
+    <div className={cn("grid gap-1.5", className)}>
+      <Label className="text-[12.5px] text-ink-soft">{label}</Label>
       {children}
-      {hint ? (
-        <span className="mt-1.5 block text-[12px] text-ink-muted">{hint}</span>
-      ) : null}
-    </label>
+      {hint ? <p className="text-[12px] text-ink-muted">{hint}</p> : null}
+    </div>
   );
 }
 
-const controlClass =
-  "w-full rounded-lg border border-line-strong bg-surface px-3 py-2 text-[13.5px] text-ink placeholder:text-ink-muted outline-none focus:border-accent focus:ring-2 focus:ring-accent/15";
-
 export function Input({ className, ...props }: ComponentProps<"input">) {
-  return <input className={cx(controlClass, className)} {...props} />;
+  return <ShadInput className={cn("h-9 text-[13.5px]", className)} {...props} />;
 }
 
 export function Textarea({ className, ...props }: ComponentProps<"textarea">) {
-  return <textarea className={cx(controlClass, className)} {...props} />;
+  return <ShadTextarea className={cn("text-[13.5px]", className)} {...props} />;
 }
 
+/**
+ * A native <select>, styled like the shadcn input. Server actions read it
+ * straight out of the submitted FormData, which the Radix select can only
+ * do through a hidden mirror.
+ */
 export function Select({ className, ...props }: ComponentProps<"select">) {
   return (
-    <select className={cx(controlClass, "appearance-none pr-8", className)} {...props} />
-  );
-}
-
-export function Checkbox({ className, ...props }: ComponentProps<"input">) {
-  return (
-    <input
-      type="checkbox"
-      className={cx("size-4 rounded border-line-strong accent-accent", className)}
+    <select
+      data-slot="select"
+      className={cn(
+        "h-9 w-full appearance-none rounded-lg border border-input bg-surface bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20stroke%3D%22%238a8d98%22%20stroke-width%3D%221.5%22%3E%3Cpath%20d%3D%22m4%206%204%204%204-4%22%2F%3E%3C%2Fsvg%3E')] bg-[length:16px_16px] bg-[right_0.6rem_center] bg-no-repeat px-2.5 py-1 pr-8 text-[13.5px] outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50",
+        className,
+      )}
       {...props}
     />
   );
 }
 
+export function Checkbox({
+  className,
+  ...props
+}: ComponentProps<typeof ShadCheckbox>) {
+  return <ShadCheckbox className={cn(className)} {...props} />;
+}
+
 const badgeTones = {
   neutral: "bg-canvas text-ink-soft border-line",
-  accent: "bg-accent-soft text-accent border-accent/15",
+  accent: "bg-brand-soft text-brand border-brand/15",
   positive: "bg-positive-soft text-positive border-positive/15",
   warning: "bg-warning-soft text-warning border-warning/15",
   negative: "bg-negative-soft text-negative border-negative/15",
@@ -308,11 +376,27 @@ export function EmptyState({
   );
 }
 
-export function Table({ children }: { children: ReactNode }) {
+export function Table({
+  children,
+  hover = false,
+  flush = false,
+}: {
+  children: ReactNode;
+  /** Highlights rows on hover, for lists whose rows open something. */
+  hover?: boolean;
+  /** Keeps the last row's divider, for full-width lists that end the page. */
+  flush?: boolean;
+}) {
   return (
     <div className="overflow-x-auto">
-      {/* The last row sits flush with the card edge, like Linear's lists. */}
-      <table className="w-full border-collapse text-[13px] [&_tbody_tr:last-child_td]:border-b-0">
+      <table
+        className={cx(
+          "w-full border-collapse text-[13px]",
+          // The last row sits flush with the card edge, like Linear's lists.
+          flush ? "" : "[&_tbody_tr:last-child_td]:border-b-0",
+          hover ? "[&_tbody_tr:hover]:bg-hover" : "",
+        )}
+      >
         {children}
       </table>
     </div>
@@ -341,7 +425,7 @@ export function Td({ children, className }: { children?: ReactNode; className?: 
 }
 
 const calloutTones = {
-  info: "border-accent/20 bg-accent-soft text-accent",
+  info: "border-brand/20 bg-brand-soft text-brand",
   warning: "border-warning/20 bg-warning-soft text-warning",
   danger: "border-negative/20 bg-negative-soft text-negative",
   positive: "border-positive/20 bg-positive-soft text-positive",

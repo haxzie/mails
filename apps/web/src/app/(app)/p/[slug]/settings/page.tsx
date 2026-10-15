@@ -25,7 +25,7 @@ import {
   Td,
   Th,
   TopBar,
-} from "@/components/ui";
+} from "@/components/shell";
 import { getEnv } from "@/lib/cloudflare";
 import { requireProject } from "@/lib/projects";
 import { SES_REGIONS } from "@/lib/regions";

@@ -16,7 +16,7 @@ import {
   Td,
   Th,
   TopBar,
-} from "@/components/ui";
+} from "@/components/shell";
 import { getDb } from "@/lib/cloudflare";
 import { formatDate, formatNumber, requireProject } from "@/lib/projects";
 

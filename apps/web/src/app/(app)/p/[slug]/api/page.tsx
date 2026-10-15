@@ -1,12 +1,11 @@
 import { desc, eq } from "drizzle-orm";
+import { Plus } from "lucide-react";
 import { apiKeys } from "@mails/db/schema";
 import { createApiKeyAction, revokeApiKeyAction } from "@/app/actions/keys";
-import { ActionForm, SubmitButton } from "@/components/client";
+import { SubmitButton } from "@/components/client";
+import { ModalButton, ModalCancel, ModalForm } from "@/components/modal";
 import {
   Badge,
-  Card,
-  CardHeader,
-  Content,
   EmptyState,
   Field,
   Input,
@@ -15,7 +14,7 @@ import {
   Td,
   Th,
   TopBar,
-} from "@/components/ui";
+} from "@/components/shell";
 import { getDb, getEnv } from "@/lib/cloudflare";
 import { formatDate, requireProject } from "@/lib/projects";
 
@@ -35,118 +34,54 @@ export default async function ApiPage({ params }: PageProps<"/p/[slug]/api">) {
     <>
       <TopBar
         title="API & keys"
-        description="Hook your product into this project"
-      />
+        description={`Base URL ${env.API_URL}`}
+        action={
+          <>
+            <ModalButton
+              label="API reference"
+              title="API reference"
+              description={`Authenticate with Authorization: Bearer mls_… · ${env.API_URL}`}
+              variant="secondary"
+              width="lg"
+            >
+              <div className="space-y-5 text-[12.5px]">
+                <Endpoint
+                  method="POST"
+                  path="/v1/events"
+                  body={`{"event":"user.signup","email":"ada@example.com","contact":{"firstName":"Ada"},"data":{"plan":"pro"}}`}
+                  note="Upserts the contact and sends the transactional template wired to that event. This is the one to call when a user signs up."
+                />
+                <Endpoint
+                  method="POST"
+                  path="/v1/contacts"
+                  body={`{"email":"ada@example.com","firstName":"Ada","properties":{"plan":"pro"},"lists":["lst_…"]}`}
+                  note="Create or update a contact without sending anything."
+                />
+                <Endpoint
+                  method="POST"
+                  path="/v1/emails"
+                  body={`{"to":"ada@example.com","subject":"Your receipt","html":"<p>Thanks!</p>"}`}
+                  note="One-off transactional send with inline content, or pass transactionalId to use a stored template."
+                />
+                <Endpoint
+                  method="GET"
+                  path="/v1/emails/:id"
+                  note="Delivery status, opens and clicks for one message."
+                />
+                <Endpoint
+                  method="POST"
+                  path="/v1/contacts/:email/unsubscribe"
+                  note="Unsubscribe from your own settings screen."
+                />
+                <Endpoint
+                  method="GET"
+                  path="/v1/stats?days=30"
+                  note="Aggregate counters."
+                />
 
-      <Content className="grid gap-5 lg:grid-cols-[1fr_320px]">
-        <div className="space-y-5">
-          <Card>
-            <CardHeader title="API keys" />
-            {keys.length === 0 ? (
-              <EmptyState
-                title="No keys yet"
-                description="Create one to start calling the API from your app."
-              />
-            ) : (
-              <Table>
-                <thead>
-                  <tr>
-                    <Th>Name</Th>
-                    <Th>Key</Th>
-                    <Th>Last used</Th>
-                    <Th />
-                  </tr>
-                </thead>
-                <tbody>
-                  {keys.map((key) => (
-                    <tr key={key.id}>
-                      <Td className="font-medium">{key.name}</Td>
-                      <Td>
-                        <Mono>{key.prefix}…</Mono>{" "}
-                        {key.revokedAt ? <Badge tone="negative">revoked</Badge> : null}
-                      </Td>
-                      <Td className="text-[12px] text-ink-muted">
-                        {formatDate(key.lastUsedAt)}
-                      </Td>
-                      <Td className="text-right">
-                        {key.revokedAt ? null : (
-                          <form action={revokeApiKeyAction}>
-                            <input type="hidden" name="slug" value={slug} />
-                            <input type="hidden" name="keyId" value={key.id} />
-                            <SubmitButton
-                              variant="ghost"
-                              size="sm"
-                              confirm={`Revoke “${key.name}”? Anything using it stops working.`}
-                            >
-                              Revoke
-                            </SubmitButton>
-                          </form>
-                        )}
-                      </Td>
-                    </tr>
-                  ))}
-                </tbody>
-              </Table>
-            )}
-          </Card>
-
-          <Card>
-            <CardHeader
-              title="Endpoints"
-              description={`Base URL: ${env.API_URL}`}
-            />
-            <div className="space-y-5 p-5 text-[12.5px]">
-              <Endpoint
-                method="POST"
-                path="/v1/events"
-                body={`{"event":"user.signup","email":"ada@example.com","contact":{"firstName":"Ada"},"data":{"plan":"pro"}}`}
-                note="Upserts the contact and sends the transactional template wired to that event. This is the one to call when a user signs up."
-              />
-              <Endpoint
-                method="POST"
-                path="/v1/contacts"
-                body={`{"email":"ada@example.com","firstName":"Ada","properties":{"plan":"pro"},"lists":["lst_…"]}`}
-                note="Create or update a contact without sending anything."
-              />
-              <Endpoint
-                method="POST"
-                path="/v1/emails"
-                body={`{"to":"ada@example.com","subject":"Your receipt","html":"<p>Thanks!</p>"}`}
-                note="One-off transactional send with inline content, or pass transactionalId to use a stored template."
-              />
-              <Endpoint
-                method="GET"
-                path="/v1/emails/:id"
-                note="Delivery status, opens and clicks for one message."
-              />
-              <Endpoint
-                method="POST"
-                path="/v1/contacts/:email/unsubscribe"
-                note="Unsubscribe from your own settings screen."
-              />
-              <Endpoint method="GET" path="/v1/stats?days=30" note="Aggregate counters." />
-            </div>
-          </Card>
-        </div>
-
-        <div className="space-y-5">
-          <Card>
-            <CardHeader title="New key" />
-            <ActionForm action={createApiKeyAction} className="space-y-3 p-5">
-              <input type="hidden" name="slug" value={slug} />
-              <Field
-                label="Name"
-                hint="The full key is shown once, right here, after you create it."
-              >
-                <Input name="name" placeholder="Production backend" />
-              </Field>
-              <SubmitButton>Create key</SubmitButton>
-            </ActionForm>
-          </Card>
-
-          <Card>
-            <CardHeader title="Node example" />
-            <pre className="overflow-x-auto px-5 py-4 font-mono text-[11.5px] leading-relaxed text-ink-soft">
+                <div>
+                  <p className="mb-1.5 font-medium">From a Node backend</p>
+                  <pre className="overflow-x-auto rounded-lg bg-canvas px-3 py-3 font-mono text-[11.5px] leading-relaxed text-ink-soft">
 {`await fetch("${env.API_URL}/v1/events", {
   method: "POST",
   headers: {
@@ -159,10 +94,86 @@ export default async function ApiPage({ params }: PageProps<"/p/[slug]/api">) {
     contact: { firstName: user.firstName },
   }),
 });`}
-            </pre>
-          </Card>
-        </div>
-      </Content>
+                  </pre>
+                </div>
+              </div>
+            </ModalButton>
+
+            <ModalButton
+              label="New key"
+              title="New API key"
+              description="The full key is shown once, right after you create it."
+              icon={<Plus className="size-3.5" strokeWidth={2} />}
+            >
+              <ModalForm
+                action={createApiKeyAction}
+                className="space-y-3"
+                keepOpenOnSuccess
+              >
+                <input type="hidden" name="slug" value={slug} />
+                <Field label="Name">
+                  <Input name="name" placeholder="Production backend" autoFocus />
+                </Field>
+                <div className="flex gap-2 pt-1">
+                  <SubmitButton>Create key</SubmitButton>
+                  <ModalCancel />
+                </div>
+              </ModalForm>
+            </ModalButton>
+          </>
+        }
+      />
+
+      {keys.length === 0 ? (
+        <EmptyState
+          title="No API keys yet"
+          description="Create one to call the API from your app."
+        />
+      ) : (
+        <Table flush>
+          <thead>
+            <tr>
+              <Th>Name</Th>
+              <Th>Key</Th>
+              <Th>Created</Th>
+              <Th>Last used</Th>
+              <Th />
+            </tr>
+          </thead>
+          <tbody>
+            {keys.map((key) => (
+              <tr key={key.id}>
+                <Td className="font-medium">{key.name}</Td>
+                <Td>
+                  <Mono>{key.prefix}…</Mono>{" "}
+                  {key.revokedAt ? <Badge tone="negative">revoked</Badge> : null}
+                </Td>
+                <Td className="text-[12px] text-ink-muted">
+                  {formatDate(key.createdAt)}
+                </Td>
+                <Td className="text-[12px] text-ink-muted">
+                  {formatDate(key.lastUsedAt)}
+                </Td>
+                <Td className="text-right">
+                  {key.revokedAt ? null : (
+                    <form action={revokeApiKeyAction}>
+                      <input type="hidden" name="slug" value={slug} />
+                      <input type="hidden" name="keyId" value={key.id} />
+                      <SubmitButton
+                        variant="ghost"
+                        size="sm"
+                        confirm={`Revoke “${key.name}”? Anything using it stops working.`}
+                      >
+                        Revoke
+                      </SubmitButton>
+                    </form>
+                  )}
+                </Td>
+              </tr>
+            ))}
+          </tbody>
+        </Table>
+      )}
     </>
   );
 }

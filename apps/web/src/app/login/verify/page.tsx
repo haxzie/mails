@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { verifyCodeAction } from "@/app/actions/auth";
 import { ActionForm, SubmitButton } from "@/components/client";
-import { Callout, Field, Input } from "@/components/ui";
+import { Callout, Field, Input } from "@/components/shell";
 
 export const instant = false;
 

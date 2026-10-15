@@ -6,6 +6,7 @@ import {
   ChevronsUpDown,
   KeyRound,
   LayoutGrid,
+  ListChecks,
   LogOut,
   Plus,
   ScrollText,
@@ -16,7 +17,11 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { logoutAction } from "@/app/actions/auth";
-import { cx } from "./ui";
+import { createProjectAction } from "@/app/actions/projects";
+import { SubmitButton } from "./client";
+import { ModalButton, ModalCancel, ModalForm } from "./modal";
+import { Field, Input, Select, cx } from "./shell";
+import { SES_REGIONS } from "@/lib/regions";
 
 export interface SidebarProject {
   id: string;
@@ -29,6 +34,7 @@ const NAV: Array<{ href: string; label: string; icon: LucideIcon; exact?: boolea
     { href: "", label: "Dashboard", icon: LayoutGrid, exact: true },
     { href: "/campaigns", label: "Campaigns", icon: Send },
     { href: "/contacts", label: "Contacts", icon: Users },
+    { href: "/lists", label: "Lists", icon: ListChecks },
     { href: "/transactional", label: "Transactional", icon: SquareTerminal },
     { href: "/logs", label: "Logs", icon: ScrollText },
     { href: "/api", label: "API & keys", icon: KeyRound },
@@ -75,13 +81,46 @@ export function Sidebar({
                 {project.name}
               </Link>
             ))}
-            <Link
-              href="/projects/new"
-              className="mt-1 flex items-center gap-1.5 rounded-lg border-t border-line px-2.5 py-1.5 text-[13px] text-ink-soft hover:bg-hover"
-            >
-              <Plus className="size-3.5" strokeWidth={1.75} />
-              New project
-            </Link>
+            <div className="mt-1 border-t border-line pt-1">
+              <ModalButton
+                label="New project"
+                title="New project"
+                description="One project per product you send email for — its own SES identity, contacts and API keys."
+                icon={<Plus className="size-3.5" strokeWidth={1.75} />}
+                className="flex w-full items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[13px] text-ink-soft hover:bg-hover"
+              >
+                <ModalForm action={createProjectAction} className="space-y-3">
+                  <Field
+                    label="Project name"
+                    hint="Shown in the sidebar and email footers."
+                  >
+                    <Input name="name" placeholder="Acme Analytics" required autoFocus />
+                  </Field>
+                  <Field
+                    label="From address"
+                    hint="You can change this later in settings."
+                  >
+                    <Input name="fromEmail" type="email" placeholder="hello@acme.com" />
+                  </Field>
+                  <Field label="Sending domain" hint="Used for DKIM, SPF and DMARC checks.">
+                    <Input name="sendingDomain" placeholder="acme.com" />
+                  </Field>
+                  <Field label="Amazon SES region">
+                    <Select name="sesRegion" defaultValue="us-east-1">
+                      {SES_REGIONS.map((region) => (
+                        <option key={region} value={region}>
+                          {region}
+                        </option>
+                      ))}
+                    </Select>
+                  </Field>
+                  <div className="flex gap-2 pt-1">
+                    <SubmitButton>Create project</SubmitButton>
+                    <ModalCancel />
+                  </div>
+                </ModalForm>
+              </ModalButton>
+            </div>
           </div>
         </details>
       </div>
