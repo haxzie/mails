@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg version="1.2" baseProfile="tiny-ps" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+<title>Sequel</title>
+<desc>Sequel logo: a gradient ring on a white background</desc>
+<rect width="512" height="512" fill="#FFFFFF"/>
+<defs>
+<linearGradient id="sequel-gradient" gradientUnits="userSpaceOnUse" x1="107.378" y1="61.9227" x2="352.528" y2="434.755">
+<stop offset="0" stop-color="#F91E5C"/>
+<stop offset="1" stop-color="#2D3CE0"/>
+</linearGradient>
+</defs>
+<g transform="translate(51.2 51.2) scale(0.8)">
+<path fill-rule="evenodd" fill="url(#sequel-gradient)" d="M256 494C387.444 494 494 387.444 494 256C494 124.556 387.444 18 256 18C124.556 18 18 124.556 18 256C18 387.444 124.556 494 256 494ZM256 402.069C336.671 402.069 402.069 336.672 402.069 256C402.069 175.329 336.671 109.931 256 109.931C175.328 109.931 109.931 175.329 109.931 256C109.931 336.672 175.328 402.069 256 402.069Z"/>
+</g>
+</svg>
