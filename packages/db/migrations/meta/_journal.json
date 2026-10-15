@@ -8,6 +8,13 @@
       "when": 1791990893304,
       "tag": "0000_striped_bullseye",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1792048582496,
+      "tag": "0001_abnormal_legion",
+      "breakpoints": true
     }
   ]
 }

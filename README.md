@@ -111,7 +111,9 @@ invalidates every session and every unsubscribe link already in an inbox.
 2. Set your sending domain and press **Verify domain** — that registers the
    domain with SES and turns on Easy DKIM.
 3. Publish every record from the **DNS records** table: three DKIM `CNAME`s,
-   the custom MAIL FROM `MX` + SPF `TXT`, and a DMARC `TXT`.
+   the custom MAIL FROM `MX` + SPF `TXT`, and a DMARC `TXT`. Export them as a
+   BIND zone file if your provider takes one, and use **What is published
+   right now** on the same screen to check what DNS actually serves.
 4. Create an SES **configuration set** (name it in Settings) with an SNS event
    destination for *Send, Delivery, Bounce, Complaint, Open, Click, Reject*,
    and subscribe the topic to:
@@ -195,6 +197,19 @@ Enforced by the app, not left to you:
   about a missing postal address, DKIM domain, configuration set or preview text
 - transactional templates can opt out of consent checks (`Send even to
   unsubscribed contacts`) for receipts and password resets only
+- a live DNS check reads the domain over DNS-over-HTTPS and flags the things
+  that silently break authentication: a missing DMARC record, *two* DMARC
+  records (which RFC 7489 treats as none at all), SPF without
+  `include:amazonses.com`, duplicate SPF records and unpublished DKIM tokens
+
+### Inbox logo (BIMI)
+
+Set a logo URL under **Settings → Domain & DNS** and the `default._bimi` TXT
+record joins the table and the zone file, with the recommended DMARC policy
+raised to `p=quarantine` — BIMI is ignored below enforcement. The logo must be
+SVG Tiny Portable/Secure, and Gmail, Yahoo and Apple Mail only render it when
+the record's `a=` tag points at a VMC (needs a registered trademark) or CMC
+certificate from DigiCert or Entrust; other providers show it without one.
 
 ## Data model
 

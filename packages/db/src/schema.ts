@@ -75,6 +75,9 @@ export const projects = sqliteTable(
     sesAccessKeyId: text(),
     sesSecretKey: text(), // AES-GCM encrypted with ENCRYPTION_KEY
     sesConfigurationSet: text(),
+    /** BIMI: the logo mailbox providers show next to your name. */
+    bimiLogoUrl: text(),
+    bimiCertificateUrl: text(),
     /** Max messages/second handed to SES (your SES account quota). */
     sendRate: integer().notNull().default(10),
     trackOpens: integer({ mode: "boolean" }).notNull().default(true),

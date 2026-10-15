@@ -5,8 +5,12 @@ import {
   projectSesCredentials,
   type SesIdentity,
 } from "@mails/core";
+import { Suspense } from "react";
 import { FileCode } from "lucide-react";
-import { verifyDomainAction } from "@/app/actions/projects";
+import {
+  updateProjectAction,
+  verifyDomainAction,
+} from "@/app/actions/projects";
 import {
   ActionForm,
   CopyButton,
@@ -14,10 +18,12 @@ import {
   DownloadButton,
   SubmitButton,
 } from "@/components/client";
+import { DnsCheck, DnsCheckSkeleton } from "./dns-check";
 import { PanelButton } from "@/components/panel";
 import {
   Badge,
   Content,
+  Input,
   Mono,
   SettingRow,
   SettingsSection,
@@ -51,8 +57,12 @@ export default async function DomainSettingsPage({
     }
   }
 
+  const bimi = {
+    logoUrl: project.bimiLogoUrl,
+    certificateUrl: project.bimiCertificateUrl,
+  };
   const records = project.sendingDomain
-    ? dnsRecordsFor(project.sendingDomain, project.sesRegion, identity)
+    ? dnsRecordsFor(project.sendingDomain, project.sesRegion, identity, bimi)
     : [];
   const zone = project.sendingDomain
     ? bindZoneFile(project.sendingDomain, records)
@@ -89,6 +99,56 @@ export default async function DomainSettingsPage({
                 {identity ? "Re-check" : "Verify domain"}
               </SubmitButton>
             </div>
+          </SettingRow>
+        </SettingsSection>
+      </ActionForm>
+
+      {project.sendingDomain ? (
+        <SettingsSection
+          title="What is published right now"
+          description="Read live from DNS, so it reflects your provider rather than this screen."
+        >
+          <Suspense fallback={<DnsCheckSkeleton />}>
+            <DnsCheck
+              domain={project.sendingDomain}
+              dkimTokens={identity?.dkimTokens ?? []}
+              bimi={bimi}
+            />
+          </Suspense>
+        </SettingsSection>
+      ) : null}
+
+      <ActionForm action={updateProjectAction}>
+        <input type="hidden" name="slug" value={slug} />
+        <SettingsSection
+          title="Inbox logo (BIMI)"
+          description="The avatar mailbox providers show beside your name. It needs DMARC at p=quarantine or p=reject, and Gmail, Yahoo and Apple Mail additionally require a VMC or CMC certificate."
+          footer={<SubmitButton size="sm">Save changes</SubmitButton>}
+        >
+          <SettingRow
+            label="Logo URL"
+            description="An https link to an SVG Tiny Portable/Secure file — square, no scripts or external references."
+            stacked
+          >
+            <Input
+              name="bimiLogoUrl"
+              defaultValue={project.bimiLogoUrl ?? ""}
+              placeholder={`https://${project.sendingDomain ?? "acme.com"}/bimi/logo.svg`}
+              autoComplete="off"
+            />
+          </SettingRow>
+
+          <SettingRow
+            label="Certificate URL"
+            description="The .pem from DigiCert or Entrust. A VMC needs a registered trademark; a CMC does not, but Gmail ignores CMCs. Without either, only a handful of providers render the logo."
+            stacked
+          >
+            <Input
+              name="bimiCertificateUrl"
+              defaultValue={project.bimiCertificateUrl ?? ""}
+              placeholder={`https://${project.sendingDomain ?? "acme.com"}/bimi/vmc.pem`}
+              autoComplete="off"
+            />
           </SettingRow>
         </SettingsSection>
       </ActionForm>

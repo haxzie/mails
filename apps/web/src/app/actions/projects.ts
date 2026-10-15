@@ -115,6 +115,29 @@ export async function updateProjectAction(
     }
     patch.sesConfigurationSet = configurationSet || null;
   }
+  if (formData.has("bimiLogoUrl")) {
+    const logo = text("bimiLogoUrl");
+    if (logo && !/^https:\/\/\S+$/i.test(logo)) {
+      return { error: "The BIMI logo must be served over https." };
+    }
+    if (logo && !/\.svg(\?.*)?$/i.test(logo)) {
+      return {
+        error:
+          "BIMI logos must be SVG — specifically SVG Tiny Portable/Secure, not an ordinary SVG export.",
+      };
+    }
+    patch.bimiLogoUrl = logo || null;
+  }
+  if (formData.has("bimiCertificateUrl")) {
+    const certificate = text("bimiCertificateUrl");
+    if (certificate && !/^https:\/\/\S+$/i.test(certificate)) {
+      return { error: "The VMC or CMC must be served over https." };
+    }
+    if (certificate && !/\.pem(\?.*)?$/i.test(certificate)) {
+      return { error: "A VMC or CMC is a .pem file." };
+    }
+    patch.bimiCertificateUrl = certificate || null;
+  }
   if (formData.has("sendRate")) {
     patch.sendRate = Math.max(1, Number(formData.get("sendRate") ?? 10));
   }
